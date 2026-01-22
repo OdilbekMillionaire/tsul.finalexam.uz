@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import Step1Config from './components/Step1Config';
 import Step2Execution from './components/Step2Execution';
 import Step3Results from './components/Step3Results';
-import { ExamContextState, Language, Question, Rubric, StudentAnswer, SUPPORTED_LANGUAGES } from './types';
+import AboutUs from './components/AboutUs';
+import Dashboard from './components/Dashboard';
+import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES } from './types';
 import { TRANSLATIONS, DEFAULT_RUBRIC } from './constants';
 
 // --- Context Setup ---
@@ -16,9 +18,10 @@ export const useExamContext = () => {
 
 // --- App Component ---
 const App: React.FC = () => {
-  // State initialization (trying to load from localStorage first)
+  // State initialization
+  const [view, setView] = useState<View>('dashboard');
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('uz-lat');
   const [masterCase, setMasterCase] = useState<string>('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [rubric, setRubric] = useState<Rubric>(DEFAULT_RUBRIC);
@@ -32,8 +35,6 @@ const App: React.FC = () => {
         const parsed = JSON.parse(saved);
         setMasterCase(parsed.masterCase || '');
         setQuestions(parsed.questions || []);
-        
-        // Safety check for rubric type migration (string -> object)
         if (parsed.rubric && parsed.rubric.items) {
            setRubric(parsed.rubric);
         } else {
@@ -78,15 +79,28 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleNewLesson = () => {
+    if (confirm("Are you sure you want to start a new lesson? All current data will be lost.")) {
+      setMasterCase('');
+      setQuestions([]);
+      setAnswers({});
+      setStep(1);
+      setView('assessor');
+      localStorage.removeItem('oxforder_state');
+    }
+  };
+
   const t = TRANSLATIONS[language];
 
   const contextValue: ExamContextState = {
+    view,
     step,
     language,
     masterCase,
     questions,
     rubric,
     answers,
+    setView,
     setStep,
     setLanguage,
     setMasterCase,
@@ -97,80 +111,175 @@ const App: React.FC = () => {
     setAssessingStatus
   };
 
+  // New Logo SVG Component
+  const Logo = () => (
+    <div className="w-10 h-10 bg-[#0B1120] rounded-lg flex items-center justify-center text-white relative overflow-hidden shadow-lg border border-slate-700">
+       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+         <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+         <path d="M2 17L12 22L22 17" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+         <path d="M2 12L12 17L22 12" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+         <rect x="11" y="11" width="2" height="6" fill="#F59E0B" />
+       </svg>
+    </div>
+  );
+
   return (
     <ExamContext.Provider value={contextValue}>
-      <div className="min-h-screen flex flex-col font-sans text-slate-800">
+      <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-[#FAFAFA]">
         
         {/* Header */}
-        <header className="bg-oxford-primary text-white border-b-4 border-oxford-accent shadow-md sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <header className="bg-white border-b border-slate-100 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
             
-            {/* Branding */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-oxford-accent rounded-sm flex items-center justify-center text-oxford-primary font-serif font-bold text-xl shadow-inner">
-                Ox
-              </div>
-              <div className="text-left">
-                <h1 className="text-2xl font-serif font-bold tracking-tight">Oxforder <span className="text-oxford-accent font-light">Final-Grade</span></h1>
-                <p className="text-xs text-slate-300 font-light tracking-wide">
-                  {t.slogan_pre}
-                  <s className="text-oxford-secondary decoration-oxford-secondary font-semibold decoration-2 opacity-80">{t.slogan_strike}</s>
-                  {t.slogan_post}
-                </p>
+            {/* Brand */}
+            <div 
+              className="flex items-center gap-3 cursor-pointer" 
+              onClick={() => setView('dashboard')}
+            >
+              <Logo />
+              <div className="flex flex-col">
+                <h1 className="text-xl font-serif font-bold text-[#0B1120] tracking-tight leading-none uppercase">
+                  TSUL Finalizer
+                </h1>
+                <span className="text-[10px] font-bold text-[#F59E0B] tracking-[0.2em] uppercase">Law AI Assessor</span>
               </div>
             </div>
 
-            {/* Language Switcher */}
-            <div className="flex bg-oxford-primary/50 p-1 rounded-lg border border-white/10">
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => setLanguage(lang.code)}
-                  className={`px-3 py-1 text-xs font-semibold rounded transition-all ${
-                    language === lang.code 
-                      ? 'bg-white text-oxford-primary shadow' 
-                      : 'text-slate-300 hover:text-white'
-                  }`}
+            {/* Nav & Tools */}
+            <div className="flex items-center gap-8">
+              <nav className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600">
+                <button 
+                  onClick={() => setView('dashboard')}
+                  className={`px-3 py-2 rounded-md transition-colors ${view === 'dashboard' ? 'text-[#0B1120] font-bold bg-slate-50' : 'hover:text-[#0B1120]'}`}
                 >
-                  {lang.label}
+                  {t.nav.dashboard}
                 </button>
-              ))}
+                <button 
+                  onClick={() => setView('assessor')}
+                  className={`px-3 py-2 rounded-md transition-colors ${view === 'assessor' ? 'text-[#0B1120] font-bold bg-slate-50' : 'hover:text-[#0B1120]'}`}
+                >
+                  {t.nav.assessor}
+                </button>
+                <button 
+                  onClick={() => setView('about')}
+                  className={`px-3 py-2 rounded-md transition-colors ${view === 'about' ? 'text-[#0B1120] font-bold bg-slate-50' : 'hover:text-[#0B1120]'}`}
+                >
+                  {t.nav.about}
+                </button>
+              </nav>
+
+              <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+
+              {/* Language */}
+              <select 
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="text-sm font-medium text-slate-600 bg-transparent outline-none cursor-pointer hover:text-[#0B1120]"
+              >
+                {SUPPORTED_LANGUAGES.map(l => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-8">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
           
-          {/* Progress Stepper */}
-          <div className="mb-10 flex items-center justify-center">
-            <div className="flex items-center gap-4 text-sm font-semibold">
-               <div className={`flex items-center gap-2 ${step >= 1 ? 'text-oxford-primary' : 'text-slate-400'}`}>
-                 <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-oxford-primary text-white border-oxford-primary' : 'border-slate-300'}`}>1</span>
-                 <span className="hidden sm:inline">{t.step1}</span>
-               </div>
-               <div className="w-12 h-0.5 bg-slate-200"></div>
-               <div className={`flex items-center gap-2 ${step >= 2 ? 'text-oxford-primary' : 'text-slate-400'}`}>
-                 <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-oxford-primary text-white border-oxford-primary' : 'border-slate-300'}`}>2</span>
-                 <span className="hidden sm:inline">{t.step2}</span>
-               </div>
-               <div className="w-12 h-0.5 bg-slate-200"></div>
-               <div className={`flex items-center gap-2 ${step >= 3 ? 'text-oxford-primary' : 'text-slate-400'}`}>
-                 <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-oxford-primary text-white border-oxford-primary' : 'border-slate-300'}`}>3</span>
-                 <span className="hidden sm:inline">{t.step3}</span>
-               </div>
-            </div>
-          </div>
+          {view === 'dashboard' && <Dashboard />}
+          
+          {view === 'assessor' && (
+            <>
+              {/* Assessor Stepper */}
+              <div className="mb-12 flex items-center justify-center">
+                <div className="flex items-center gap-4 text-sm font-semibold">
+                  <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#0B1120]' : 'text-slate-300'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-[#0B1120] text-white border-[#0B1120]' : 'border-slate-200'}`}>1</span>
+                    <span className="hidden sm:inline">{t.step1}</span>
+                  </div>
+                  <div className="w-16 h-px bg-slate-200"></div>
+                  <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#0B1120]' : 'text-slate-300'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-[#0B1120] text-white border-[#0B1120]' : 'border-slate-200'}`}>2</span>
+                    <span className="hidden sm:inline">{t.step2}</span>
+                  </div>
+                  <div className="w-16 h-px bg-slate-200"></div>
+                  <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#0B1120]' : 'text-slate-300'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-[#0B1120] text-white border-[#0B1120]' : 'border-slate-200'}`}>3</span>
+                    <span className="hidden sm:inline">{t.step3}</span>
+                  </div>
+                </div>
+              </div>
 
-          {/* Steps */}
-          {step === 1 && <Step1Config />}
-          {step === 2 && <Step2Execution />}
-          {step === 3 && <Step3Results />}
+              {/* Assessor Steps */}
+              {step === 1 && <Step1Config />}
+              {step === 2 && <Step2Execution />}
+              {step === 3 && <Step3Results />}
+              
+              {/* Reset/New Lesson Button for Assessor view */}
+              {questions.length > 0 && (
+                <div className="flex justify-center mt-12 border-t border-slate-200 pt-8">
+                    <button 
+                        onClick={handleNewLesson} 
+                        className="text-xs text-red-500 hover:text-red-700 underline"
+                    >
+                        Reset current session
+                    </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {view === 'about' && <AboutUs />}
 
         </main>
         
-        <footer className="py-6 text-center text-slate-400 text-xs border-t border-slate-200 mt-auto">
-          <p>&copy; {new Date().getFullYear()} Oxforder Academic Systems. Powered by Gemini Pro 1.5 & Google Cloud.</p>
+        {/* Footer */}
+        <footer className="bg-[#0B1120] text-slate-400 py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between gap-12">
+              
+              {/* Brand Col */}
+              <div className="max-w-xs">
+                <div className="flex items-center gap-3 mb-4 text-white">
+                  <Logo />
+                  <span className="text-xl font-serif font-bold uppercase">TSUL Finalizer</span>
+                </div>
+                <p className="text-sm font-medium text-slate-500">
+                  {t.dashboard.heroSubtitle}
+                </p>
+              </div>
+
+              {/* Links Col */}
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-6">{t.footer.platform}</h4>
+                <ul className="space-y-3 text-sm">
+                  <li><button onClick={() => setView('dashboard')} className="hover:text-white transition">{t.nav.dashboard}</button></li>
+                  <li><button onClick={() => setView('assessor')} className="hover:text-white transition">{t.nav.assessor}</button></li>
+                  <li><button onClick={() => setView('about')} className="hover:text-white transition">{t.nav.about}</button></li>
+                </ul>
+              </div>
+
+              {/* Legal Col */}
+              <div className="max-w-sm">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-6">{t.about.legalTitle}</h4>
+                <div className="pl-4 border-l-2 border-[#F59E0B]">
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    {t.about.legalText}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+              <p>{t.footer.rights}</p>
+              <div className="flex gap-6">
+                <span className="hover:text-white cursor-pointer">{t.footer.privacy}</span>
+                <span className="hover:text-white cursor-pointer">{t.footer.terms}</span>
+                <span className="hover:text-white cursor-pointer">{t.footer.support}</span>
+              </div>
+            </div>
+          </div>
         </footer>
       </div>
     </ExamContext.Provider>

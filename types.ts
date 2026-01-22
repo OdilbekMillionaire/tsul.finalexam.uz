@@ -1,4 +1,5 @@
 export type Language = 'en' | 'ru' | 'uz-lat' | 'uz-cyr';
+export type View = 'dashboard' | 'assessor' | 'about';
 
 export interface RubricItem {
   id: string;
@@ -36,6 +37,7 @@ export interface StudentAnswer {
 }
 
 export interface ExamContextState {
+  view: View;
   step: 1 | 2 | 3;
   language: Language;
   masterCase: string;
@@ -43,6 +45,7 @@ export interface ExamContextState {
   rubric: Rubric;
   answers: Record<string, StudentAnswer>; // Keyed by Question ID
   
+  setView: (view: View) => void;
   setStep: (step: 1 | 2 | 3) => void;
   setLanguage: (lang: Language) => void;
   setMasterCase: (text: string) => void;
@@ -54,8 +57,7 @@ export interface ExamContextState {
 }
 
 export const SUPPORTED_LANGUAGES: { code: Language; label: string }[] = [
+  { code: 'uz-lat', label: "O'zbekcha" },
   { code: 'en', label: 'English' },
-  { code: 'uz-lat', label: "O'zbek (Lotin)" },
-  { code: 'uz-cyr', label: 'Ўзбек (Кирилл)' },
   { code: 'ru', label: 'Русский' },
 ];
