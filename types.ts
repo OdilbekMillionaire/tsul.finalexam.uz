@@ -59,6 +59,7 @@ export interface ExamContextState {
 
 export const SUPPORTED_LANGUAGES: { code: Language; label: string }[] = [
   { code: 'uz-lat', label: "O'zbekcha" },
+  { code: 'uz-cyr', label: "Ўзбекча" },
   { code: 'en', label: 'English' },
   { code: 'ru', label: 'Русский' },
 ];
