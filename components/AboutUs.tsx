@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
@@ -47,23 +48,6 @@ const AboutUs: React.FC = () => {
             {t.about.techText}
           </p>
         </div>
-      </div>
-
-      {/* Prominent Legal Disclaimer */}
-      <div className="max-w-4xl mx-auto px-6 mb-20">
-         <div className="bg-amber-50 border-l-4 border-[#F59E0B] p-6 md:p-8 rounded-r-xl flex gap-4 md:gap-6 items-start shadow-sm">
-             <div className="flex-shrink-0 text-[#F59E0B] mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-                  <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
-                </svg>
-             </div>
-             <div>
-                <h3 className="text-[#B45309] font-bold text-lg uppercase tracking-wide mb-2">{t.about.legalTitle}</h3>
-                <p className="text-[#92400E] font-medium leading-relaxed">
-                   {t.about.legalText}
-                </p>
-             </div>
-         </div>
       </div>
 
       {/* Developer Section (Redesigned) */}
