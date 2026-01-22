@@ -14,7 +14,8 @@ const Step2Execution: React.FC = () => {
     updateAnswer, 
     setAssessment, 
     setAssessingStatus,
-    setStep 
+    setStep,
+    resetAnswers
   } = useExamContext();
 
   const t = TRANSLATIONS[language];
@@ -63,11 +64,21 @@ const Step2Execution: React.FC = () => {
   const allAssessed = questions.every(q => answers[q.id]?.assessment);
 
   return (
-    <div className="space-y-12 animate-fade-in">
+    <div className="space-y-12 animate-fade-in relative">
        {/* Case Reference (Collapsible or sticky could be nice, keeping it simple for now) */}
        <div className="bg-oxford-primary/5 p-4 rounded border border-oxford-primary/10 text-sm text-slate-600 mb-8">
         <h3 className="font-bold text-oxford-primary mb-2">Reference Case:</h3>
         <p className="line-clamp-3">{masterCase}</p>
+      </div>
+
+      <div className="flex justify-end mb-4">
+        <button 
+           onClick={resetAnswers}
+           className="text-sm font-bold text-oxford-secondary hover:text-red-700 flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          {t.resetAnswers}
+        </button>
       </div>
 
       <div className="space-y-8">
@@ -93,7 +104,7 @@ const Step2Execution: React.FC = () => {
                   placeholder={t.placeholders.answer}
                   value={answer?.text || ''}
                   onChange={(e) => updateAnswer(q.id, e.target.value)}
-                  disabled={isAssessing || hasResult}
+                  disabled={isAssessing} // Removed hasResult check to allow re-writing
                 />
 
                 <div className="flex justify-between items-center">

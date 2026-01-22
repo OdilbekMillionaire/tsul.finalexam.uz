@@ -63,6 +63,7 @@ export const TRANSLATIONS = {
     citations: "Statutory Citations (Lex.uz)",
     totalScore: "Total Score",
     assessing: "Adjudicating...",
+    resetAnswers: "New Student (Reset Answers)",
     rubricUI: {
       weight: "Weight",
       addCriterion: "Add Criterion",
@@ -142,6 +143,7 @@ export const TRANSLATIONS = {
     citations: "Законодательные ссылки (Lex.uz)",
     totalScore: "Итоговый балл",
     assessing: "Оценивание...",
+    resetAnswers: "Новый студент (Сброс ответов)",
     rubricUI: {
       weight: "Вес",
       addCriterion: "Добавить критерий",
@@ -221,6 +223,7 @@ export const TRANSLATIONS = {
     citations: "Qonunchilikka havolalar (Lex.uz)",
     totalScore: "Jami ball",
     assessing: "Baholanmoqda...",
+    resetAnswers: "Yangi talaba (Javoblarni tozalash)",
     rubricUI: {
       weight: "Vazn",
       addCriterion: "Mezon qo'shish",
@@ -236,85 +239,6 @@ export const TRANSLATIONS = {
       answer: "Talaba javobini shu yerga yozing...",
       rubricName: "Mezon nomi...",
       rubricDesc: "Baholash mezonini tavsiflang..."
-    }
-  },
-  'uz-cyr': {
-    nav: {
-      dashboard: "Бошқарув панели",
-      assessor: "AI баҳоловчи",
-      about: "Биз ҳақимизда"
-    },
-    dashboard: {
-      heroTitle: "TSUL Finalizer",
-      heroSubtitle: "Ҳуқуқ соҳасидаги энг яхши AI якуний имтиҳон баҳоловчиси",
-      cta: "Баҳолашни бошлаш",
-      feature1Title: "Lex.uz интеграцияси",
-      feature1Text: "Ўзбекистон миллий қонунчилик базасига чуқур ҳаволалар.",
-      feature2Title: "Академик аниқлик",
-      feature2Text: "ТДЮУ баҳолаш стандартларига мослаштирилган махсус рубрикалар.",
-      feature3Title: "Кўп тиллилик",
-      feature3Text: "Ўзбек, рус ва инглиз тилларидаги юридик терминологияни қўллаб-қувватлаш.",
-      statsTitle: "ТДЮУ стандартларига мувофиқлик",
-      stats1: "Ўзбекистон процессуал кодексларига қатъий риоя қилиш.",
-      stats2: "Ҳуқуқий асослаш ва хулоса учун мослашувчан вазн.",
-      stats3: "Имтиҳон маълумотлари учун хавфсиз, маҳаллийлаштирилган муҳит.",
-      accuracy: "Аниқлик",
-      model: "Gemini 3 Pro"
-    },
-    about: {
-      heroTitle: "TSUL Finalizer - Ҳуқуқий мукаммаллик",
-      heroSubtitle: "Тошкент давлат юридик университети (ТДЮУ) стандартларига мослаштирилган сунъий интеллект платформаси.",
-      missionTitle: "Бизнинг миссиямиз",
-      missionText: "Юридик таълимни рақамлаштириш ва талабаларга энг сўнгги педагогик технологиялар ёрдамида чуқур билим бериш.",
-      techTitle: "AI технологияси",
-      techText: "Google Gemini 3 Pro моделлари асосида ишловчи тизим ҳар бир талабанинг эҳтиёжига мослаштирилган ноёб дарсларни яратади.",
-      developerTitle: "Ишлаб чиқарувчи",
-      developerText: "Ушбу платформа Oxforder МЧЖ томонидан академик мукаммаллик тамойиллари асосида яратилган.",
-      legalTitle: "ЮРИДИК ОГОҲЛАНТИРИШ",
-      legalText: "TSUL Finalizer - бу сунъий интеллектга асосланган академик ёрдамчи. Яратилган таркиб фақат маълумот олиш учун мўлжалланган ва профессионал юридик маслаҳат ҳисобланмайди."
-    },
-    footer: {
-      platform: "ПЛАТФОРМА",
-      rights: "© 2026 Oxforder МЧЖ. Барча ҳуқуқлар ҳимояланган.",
-      privacy: "Махфийлик сиёсати",
-      terms: "Фойдаланиш шартлари",
-      support: "Қўллаб-қувватлаш"
-    },
-    step1: "Конфигурация",
-    step2: "Ижро",
-    step3: "Якуний ҳукм",
-    masterCase: "Асосий иш фабуласи",
-    questions: "Имтиҳон саволлари",
-    addQuestion: "Савол қўшиш",
-    maxWeight: "Макс. балл",
-    rubric: "Рубрика",
-    quickRubric: "Тезкор рубрика",
-    advancedRubric: "Махсус рубрика",
-    next: "Кейинги босқич",
-    back: "Орқага",
-    assess: "Баҳолаш",
-    studentAnswer: "Талаба жавоби",
-    score: "Балл",
-    rationale: "Асосли тушунтириш",
-    roadmap: "Ўсиш режаси",
-    citations: "Қонунчиликка ҳаволалар (Lex.uz)",
-    totalScore: "Жами балл",
-    assessing: "Баҳоланмоқда...",
-    rubricUI: {
-      weight: "Вазн",
-      addCriterion: "Мезон қўшиш",
-      name: "Номи",
-      description: "Тавсифи",
-      maxBall: "Ball",
-      total: "Jami",
-      delete: "Ўчириш"
-    },
-    placeholders: {
-      case: "Ҳуқуқий казусни киритинг...",
-      question: "Imtihon саволини киритинг...",
-      answer: "Талаба жавобини шу ерга ёзинг...",
-      rubricName: "Мезон номи...",
-      rubricDesc: "Баҳолаш мезонини тавсифланг..."
     }
   }
 };

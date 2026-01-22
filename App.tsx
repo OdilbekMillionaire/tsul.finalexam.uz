@@ -90,6 +90,12 @@ const App: React.FC = () => {
     }
   };
 
+  const resetAnswers = () => {
+    if (confirm("Are you sure you want to clear all student answers and grades? This keeps your Case and Questions for the next student.")) {
+       setAnswers({});
+    }
+  };
+
   const t = TRANSLATIONS[language];
 
   const contextValue: ExamContextState = {
@@ -108,7 +114,8 @@ const App: React.FC = () => {
     setRubric,
     updateAnswer,
     setAssessment,
-    setAssessingStatus
+    setAssessingStatus,
+    resetAnswers
   };
 
   // New Logo SVG Component
@@ -223,7 +230,7 @@ const App: React.FC = () => {
                         onClick={handleNewLesson} 
                         className="text-xs text-red-500 hover:text-red-700 underline"
                     >
-                        Reset current session
+                        Reset current session (Delete everything)
                     </button>
                 </div>
               )}

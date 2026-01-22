@@ -54,6 +54,7 @@ export interface ExamContextState {
   updateAnswer: (questionId: string, text: string) => void;
   setAssessment: (questionId: string, result: AssessmentResult) => void;
   setAssessingStatus: (questionId: string, isAssessing: boolean) => void;
+  resetAnswers: () => void;
 }
 
 export const SUPPORTED_LANGUAGES: { code: Language; label: string }[] = [
