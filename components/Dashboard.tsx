@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
@@ -5,7 +6,11 @@ import { TRANSLATIONS } from '../constants';
 const IMAGES = [
   "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=2000", // Gavel/Law
   "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&q=80&w=2000", // Library
-  "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?auto=format&fit=crop&q=80&w=2000"  // Architecture
+  "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?auto=format&fit=crop&q=80&w=2000", // Architecture
+  "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&q=80&w=2000", // Business/Meeting
+  "https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?auto=format&fit=crop&q=80&w=2000", // Pen/Paper
+  "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=2000", // Law books
+  "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=2000"  // Study
 ];
 
 const Dashboard: React.FC = () => {
@@ -24,8 +29,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="animate-fade-in font-sans">
       
-      {/* Hero Carousel Section */}
-      <div className="relative h-[500px] w-full overflow-hidden rounded-2xl shadow-2xl mb-12">
+      {/* Hero Carousel Section - Expanded to full width of parent padding using negative margins */}
+      <div className="relative h-[500px] w-[calc(100%+3rem)] -mx-6 overflow-hidden shadow-2xl mb-12">
         {IMAGES.map((img, index) => (
           <div 
             key={index}
@@ -38,7 +43,7 @@ const Dashboard: React.FC = () => {
         ))}
 
         {/* Hero Content */}
-        <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-20 max-w-4xl z-10">
+        <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-20 max-w-4xl z-10 ml-6">
           <div className="bg-[#F59E0B] w-20 h-2 mb-6 rounded-full"></div>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white mb-6 leading-tight drop-shadow-lg">
             {t.dashboard.heroTitle}
@@ -58,7 +63,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Carousel Indicators */}
-        <div className="absolute bottom-6 right-10 flex gap-2 z-10">
+        <div className="absolute bottom-6 right-10 flex gap-2 z-10 mr-6">
           {IMAGES.map((_, idx) => (
             <button
               key={idx}

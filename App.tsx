@@ -1,11 +1,12 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Step1Config from './components/Step1Config';
 import Step2Execution from './components/Step2Execution';
 import Step3Results from './components/Step3Results';
 import AboutUs from './components/AboutUs';
 import Dashboard from './components/Dashboard';
-import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES } from './types';
-import { TRANSLATIONS, DEFAULT_RUBRIC } from './constants';
+import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES, ChatMessage } from './types';
+import { TRANSLATIONS, RUBRIC_TEMPLATES } from './constants';
 
 // --- Context Setup ---
 const ExamContext = createContext<ExamContextState | undefined>(undefined);
@@ -24,8 +25,13 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>('uz-lat');
   const [masterCase, setMasterCase] = useState<string>('');
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [rubric, setRubric] = useState<Rubric>(DEFAULT_RUBRIC);
+  // Initialize rubric with the default language template
+  const [rubric, setRubric] = useState<Rubric>(RUBRIC_TEMPLATES['uz-lat']);
   const [answers, setAnswers] = useState<Record<string, StudentAnswer>>({});
+  
+  // New State for Step 3 features
+  const [overallFeedback, setOverallFeedback] = useState<string | null>(null);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   // Hydration Effect
   useEffect(() => {
@@ -35,11 +41,19 @@ const App: React.FC = () => {
         const parsed = JSON.parse(saved);
         setMasterCase(parsed.masterCase || '');
         setQuestions(parsed.questions || []);
+        setAnswers(parsed.answers || {}); // Hydrate answers
         if (parsed.rubric && parsed.rubric.items) {
-           setRubric(parsed.rubric);
+           // Ensure customInstructions exists even if loading old state
+           const hydratedRubric = {
+             ...parsed.rubric,
+             customInstructions: parsed.rubric.customInstructions || ''
+           };
+           setRubric(hydratedRubric);
         } else {
-           setRubric(DEFAULT_RUBRIC);
+           setRubric(RUBRIC_TEMPLATES['uz-lat']);
         }
+        if (parsed.overallFeedback) setOverallFeedback(parsed.overallFeedback);
+        if (parsed.chatHistory) setChatHistory(parsed.chatHistory);
       } catch (e) {
         console.error("Failed to parse local storage", e);
       }
@@ -48,9 +62,11 @@ const App: React.FC = () => {
 
   // Persistence Effect
   useEffect(() => {
-    const stateToSave = { masterCase, questions, rubric };
+    const stateToSave = { masterCase, questions, rubric, answers, overallFeedback, chatHistory };
     localStorage.setItem('oxforder_state', JSON.stringify(stateToSave));
-  }, [masterCase, questions, rubric]);
+  }, [masterCase, questions, rubric, answers, overallFeedback, chatHistory]);
+
+  const t = TRANSLATIONS[language];
 
   // Actions
   const updateAnswer = (questionId: string, text: string) => {
@@ -78,25 +94,41 @@ const App: React.FC = () => {
       [questionId]: { ...prev[questionId], isAssessing }
     }));
   };
+  
+  const addChatMessage = (role: 'user' | 'model', text: string) => {
+    setChatHistory(prev => [...prev, { role, text, timestamp: Date.now() }]);
+  };
 
   const handleNewLesson = () => {
-    if (confirm("Are you sure you want to start a new lesson? All current data will be lost.")) {
+    if (window.confirm(t.confirmReset)) {
       setMasterCase('');
       setQuestions([]);
       setAnswers({});
+      setOverallFeedback(null);
+      setChatHistory([]);
       setStep(1);
       setView('assessor');
+      // Reset rubric to the template of the current language
+      setRubric(RUBRIC_TEMPLATES[language]);
       localStorage.removeItem('oxforder_state');
+      window.scrollTo(0, 0);
     }
   };
 
   const resetAnswers = () => {
     if (confirm("Are you sure you want to clear all student answers and grades? This keeps your Case and Questions for the next student.")) {
        setAnswers({});
+       setOverallFeedback(null);
+       setChatHistory([]);
     }
   };
 
-  const t = TRANSLATIONS[language];
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLang = e.target.value as Language;
+    setLanguage(newLang);
+    // Switch the rubric to the new language's template
+    setRubric(RUBRIC_TEMPLATES[newLang]);
+  };
 
   const contextValue: ExamContextState = {
     view,
@@ -106,6 +138,8 @@ const App: React.FC = () => {
     questions,
     rubric,
     answers,
+    overallFeedback,
+    chatHistory,
     setView,
     setStep,
     setLanguage,
@@ -115,6 +149,8 @@ const App: React.FC = () => {
     updateAnswer,
     setAssessment,
     setAssessingStatus,
+    setOverallFeedback,
+    addChatMessage,
     resetAnswers
   };
 
@@ -129,6 +165,10 @@ const App: React.FC = () => {
        </svg>
     </div>
   );
+
+  const handleFooterLinkClick = (name: string) => {
+    alert(`${name} - This link is for demonstration purposes in the MVP.`);
+  };
 
   return (
     <ExamContext.Provider value={contextValue}>
@@ -180,7 +220,7 @@ const App: React.FC = () => {
               {/* Language */}
               <select 
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as Language)}
+                onChange={handleLanguageChange}
                 className="text-sm font-medium text-slate-600 bg-transparent outline-none cursor-pointer hover:text-[#0B1120]"
               >
                 {SUPPORTED_LANGUAGES.map(l => (
@@ -230,7 +270,7 @@ const App: React.FC = () => {
                         onClick={handleNewLesson} 
                         className="text-xs text-red-500 hover:text-red-700 underline"
                     >
-                        Reset current session (Delete everything)
+                        {t.resetSession}
                     </button>
                 </div>
               )}
@@ -281,9 +321,9 @@ const App: React.FC = () => {
             <div className="border-t border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
               <p>{t.footer.rights}</p>
               <div className="flex gap-6">
-                <span className="hover:text-white cursor-pointer">{t.footer.privacy}</span>
-                <span className="hover:text-white cursor-pointer">{t.footer.terms}</span>
-                <span className="hover:text-white cursor-pointer">{t.footer.support}</span>
+                <button onClick={() => handleFooterLinkClick(t.footer.privacy)} className="hover:text-white cursor-pointer transition-colors">{t.footer.privacy}</button>
+                <button onClick={() => handleFooterLinkClick(t.footer.terms)} className="hover:text-white cursor-pointer transition-colors">{t.footer.terms}</button>
+                <button onClick={() => handleFooterLinkClick(t.footer.support)} className="hover:text-white cursor-pointer transition-colors">{t.footer.support}</button>
               </div>
             </div>
           </div>

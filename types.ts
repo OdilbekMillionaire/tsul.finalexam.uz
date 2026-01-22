@@ -1,3 +1,4 @@
+
 export type Language = 'en' | 'ru' | 'uz-lat' | 'uz-cyr';
 export type View = 'dashboard' | 'assessor' | 'about';
 
@@ -11,8 +12,9 @@ export interface RubricItem {
 }
 
 export interface Rubric {
-  type: 'quick' | 'advanced';
+  type: 'quick' | 'custom';
   items: RubricItem[];
+  customInstructions: string; // New field for free-text instructions
 }
 
 export interface Question {
@@ -36,6 +38,12 @@ export interface StudentAnswer {
   isAssessing: boolean;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+}
+
 export interface ExamContextState {
   view: View;
   step: 1 | 2 | 3;
@@ -44,6 +52,8 @@ export interface ExamContextState {
   questions: Question[];
   rubric: Rubric;
   answers: Record<string, StudentAnswer>; // Keyed by Question ID
+  overallFeedback: string | null;
+  chatHistory: ChatMessage[];
   
   setView: (view: View) => void;
   setStep: (step: 1 | 2 | 3) => void;
@@ -54,6 +64,8 @@ export interface ExamContextState {
   updateAnswer: (questionId: string, text: string) => void;
   setAssessment: (questionId: string, result: AssessmentResult) => void;
   setAssessingStatus: (questionId: string, isAssessing: boolean) => void;
+  setOverallFeedback: (feedback: string | null) => void;
+  addChatMessage: (role: 'user' | 'model', text: string) => void;
   resetAnswers: () => void;
 }
 

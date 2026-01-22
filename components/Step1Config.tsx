@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
@@ -20,6 +21,7 @@ const Step1Config: React.FC = () => {
   // --- Undo/Redo History Logic ---
   const [history, setHistory] = useState<{ c: string; q: Question[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
   // Initialize history on mount
   useEffect(() => {
@@ -56,6 +58,13 @@ const Step1Config: React.FC = () => {
       setQuestions(snapshot.q);
       setHistoryIndex(nextIndex);
     }
+  };
+
+  const handleManualSave = () => {
+    // App.tsx handles the actual saving to localStorage via useEffect
+    // This just gives visual feedback
+    setShowSaveConfirm(true);
+    setTimeout(() => setShowSaveConfirm(false), 2000);
   };
 
   const canUndo = historyIndex > 0;
@@ -101,6 +110,18 @@ const Step1Config: React.FC = () => {
     pushHistory(masterCase, newQuestions);
   };
 
+  const handleMoveQuestion = (index: number, direction: 'up' | 'down') => {
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === questions.length - 1)) return;
+    
+    const newQuestions = [...questions];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    // Swap
+    [newQuestions[index], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[index]];
+    
+    setQuestions(newQuestions);
+    pushHistory(masterCase, newQuestions);
+  };
+
   // Rubric Logic
   const handleToggleItem = (id: string) => {
     setRubric({
@@ -121,7 +142,7 @@ const Step1Config: React.FC = () => {
       id: crypto.randomUUID(),
       label: '',
       description: '',
-      weight: 5,
+      weight: 5, // Default Medium
       maxWeight: 10,
       enabled: true
     };
@@ -132,46 +153,88 @@ const Step1Config: React.FC = () => {
     setRubric({ ...rubric, items: rubric.items.filter(item => item.id !== id) });
   };
 
-  const handleMoveItem = (index: number, direction: 'up' | 'down') => {
-    if ((direction === 'up' && index === 0) || (direction === 'down' && index === rubric.items.length - 1)) return;
-    
-    const newItems = [...rubric.items];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    // Swap elements
-    [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-    
-    setRubric({ ...rubric, items: newItems });
+  const getSliderColorClass = (val: number) => {
+      if (val < 4) return 'accent-red-500'; // Low
+      if (val < 8) return 'accent-yellow-500'; // Medium
+      return 'accent-green-500'; // High
   };
 
-  const switchRubricType = (type: 'quick' | 'advanced') => {
-    setRubric({ ...rubric, type });
+  const getBadgeColorClass = (val: number) => {
+    if (val < 4) return 'bg-red-100 text-red-700 border-red-200';
+    if (val < 8) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    return 'bg-green-100 text-green-700 border-green-200';
   };
 
-  const totalRubricWeight = rubric.items.filter(i => i.enabled).reduce((acc, curr) => acc + curr.weight, 0);
+  const getWeightLabel = (val: number) => {
+     if (val < 4) return t.rubricUI.levels.low;
+     if (val < 8) return t.rubricUI.levels.medium;
+     return t.rubricUI.levels.high;
+  };
+
+  const toggleRubricType = (type: 'quick' | 'custom') => {
+     setRubric({ ...rubric, type });
+  };
 
   return (
     <div className="space-y-8 animate-fade-in relative">
-      
-      {/* Global Undo/Redo Controls */}
-      <div className="flex items-center justify-end gap-2 sticky top-24 z-20 pointer-events-none">
-        <div className="bg-white p-1 rounded-lg shadow-md border border-slate-200 flex gap-1 pointer-events-auto">
-          <button
-            onClick={handleUndo}
-            disabled={!canUndo}
-            className="p-2 rounded hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition-colors"
-            title="Undo"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-          </button>
-          <div className="w-px bg-slate-200 my-1"></div>
-          <button
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className="p-2 rounded hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition-colors"
-            title="Redo"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" /></svg>
-          </button>
+
+      {/* Header with Logo and Save */}
+      <div className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-slate-200 gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-[#0B1120] rounded flex items-center justify-center text-white relative overflow-hidden shadow-sm">
+             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+               <path d="M2 17L12 22L22 17" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+               <rect x="11" y="11" width="2" height="6" fill="#F59E0B" />
+             </svg>
+          </div>
+          <h2 className="text-lg font-serif font-bold text-oxford-primary">
+            {t.examConfig}
+          </h2>
+        </div>
+
+        <div className="flex items-center gap-2">
+            {/* Global Undo/Redo Controls */}
+            <div className="bg-slate-50 p-1 rounded-lg border border-slate-200 flex gap-1">
+              <button
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition-colors"
+                title="Undo"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+              </button>
+              <div className="w-px bg-slate-200 my-1"></div>
+              <button
+                onClick={handleRedo}
+                disabled={!canRedo}
+                className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition-colors"
+                title="Redo"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" /></svg>
+              </button>
+            </div>
+
+            <button
+              onClick={handleManualSave}
+              className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${
+                showSaveConfirm 
+                  ? 'bg-green-100 text-green-700 border border-green-200' 
+                  : 'bg-white text-oxford-primary border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {showSaveConfirm ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t.saved}
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                  {t.saveProgress}
+                </>
+              )}
+            </button>
         </div>
       </div>
 
@@ -193,7 +256,7 @@ const Step1Config: React.FC = () => {
           <h2 className="text-xl font-serif font-bold text-oxford-primary">{t.questions}</h2>
           <button 
             onClick={handleAddQuestion}
-            className="px-4 py-2 bg-oxford-primary text-white text-sm rounded hover:bg-opacity-90 transition"
+            className="px-4 py-2 bg-oxford-primary text-white text-sm rounded hover:bg-opacity-90 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
           >
             + {t.addQuestion}
           </button>
@@ -201,13 +264,25 @@ const Step1Config: React.FC = () => {
         
         <div className="space-y-4">
           {questions.map((q, idx) => (
-            <div key={q.id} className="flex gap-4 items-start p-4 bg-slate-50 rounded border border-slate-200">
-              <span className="font-bold text-slate-400 mt-2">#{idx + 1}</span>
+            <div key={q.id} className="flex gap-4 items-start p-4 bg-slate-50 rounded border border-slate-200 group">
+              <div className="flex flex-col gap-1 mt-2">
+                 <span className="font-bold text-slate-400 text-xs">#{idx + 1}</span>
+                 {/* Reordering Controls */}
+                 <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleMoveQuestion(idx, 'up')} disabled={idx === 0} className="text-slate-400 hover:text-oxford-primary disabled:opacity-20">
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 15l-6-6-6 6"/></svg>
+                    </button>
+                    <button onClick={() => handleMoveQuestion(idx, 'down')} disabled={idx === questions.length - 1} className="text-slate-400 hover:text-oxford-primary disabled:opacity-20">
+                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                 </div>
+              </div>
+
               <div className="flex-1 space-y-2">
                 <input
                   type="text"
                   placeholder={t.placeholders.question}
-                  className="w-full p-2 border border-slate-300 rounded focus:border-oxford-primary outline-none"
+                  className="w-full p-2 border border-slate-300 rounded focus:border-oxford-primary hover:border-slate-400 hover:shadow-sm outline-none transition-all duration-200"
                   value={q.text}
                   onChange={(e) => handleUpdateQuestion(q.id, 'text', e.target.value)}
                   onBlur={handleQuestionBlur}
@@ -217,7 +292,7 @@ const Step1Config: React.FC = () => {
                 <label className="text-xs text-slate-500 block mb-1">{t.maxWeight}</label>
                 <input
                   type="number"
-                  className="w-full p-2 border border-slate-300 rounded focus:border-oxford-primary outline-none"
+                  className="w-full p-2 border border-slate-300 rounded focus:border-oxford-primary hover:border-slate-400 hover:shadow-sm outline-none transition-all duration-200"
                   value={q.maxWeight}
                   onChange={(e) => handleUpdateQuestion(q.id, 'maxWeight', parseInt(e.target.value) || 0)}
                   onBlur={handleQuestionBlur}
@@ -232,176 +307,139 @@ const Step1Config: React.FC = () => {
             </div>
           ))}
           {questions.length === 0 && (
-            <p className="text-slate-400 text-center italic py-4">No questions added yet.</p>
+            <p className="text-slate-400 text-center italic py-4">{t.noQuestions}</p>
           )}
         </div>
       </section>
 
       {/* Rubric Section */}
       <section className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-        <h2 className="text-xl font-serif font-bold text-oxford-primary mb-4">{t.rubric}</h2>
-        
-        {/* Tab Switcher */}
-        <div className="flex bg-slate-100 p-1 rounded-lg mb-6 border border-slate-200">
-          <button
-            onClick={() => switchRubricType('quick')}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-              rubric.type === 'quick' 
-                ? 'bg-white text-oxford-primary shadow-sm border border-slate-200' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {t.quickRubric}
-          </button>
-          <button
-            onClick={() => switchRubricType('advanced')}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-              rubric.type === 'advanced' 
-                ? 'bg-white text-oxford-primary shadow-sm border border-slate-200' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {t.advancedRubric}
-          </button>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+           <h2 className="text-xl font-serif font-bold text-oxford-primary">{t.rubric}</h2>
+           
+           {/* Rubric Type Toggle */}
+           <div className="flex bg-slate-100 p-1 rounded-lg self-start md:self-auto">
+              <button 
+                onClick={() => toggleRubricType('quick')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${rubric.type === 'quick' ? 'bg-white shadow text-oxford-primary' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {t.rubricUI.structuredMode}
+              </button>
+              <button 
+                onClick={() => toggleRubricType('custom')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${rubric.type === 'custom' ? 'bg-white shadow text-oxford-primary' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {t.rubricUI.customMode}
+              </button>
+           </div>
         </div>
-
-        {/* Quick Rubric UI (Slimmed Down & Editable) */}
-        {rubric.type === 'quick' && (
-          <div className="space-y-3">
+        
+        {rubric.type === 'quick' ? (
+           /* Simplified Quick Rubric UI (Existing) */
+           <div className="flex flex-col gap-2 animate-fade-in">
             {rubric.items.map((item) => (
-              <div key={item.id} className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 hover:shadow-md ${item.enabled ? 'bg-white border-slate-200 border-l-4 border-l-[#E3D39E] shadow-sm' : 'bg-slate-50 border-transparent opacity-60'}`}>
+              <div 
+                key={item.id} 
+                className={`group relative flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
+                  item.enabled 
+                    ? 'bg-white border-slate-200 shadow-sm hover:shadow-md' 
+                    : 'bg-slate-50 border-slate-100 opacity-60 hover:opacity-100'
+                }`}
+              >
                 
-                {/* Toggle Switch */}
-                <button 
-                  onClick={() => handleToggleItem(item.id)}
-                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out flex items-center flex-shrink-0 ${item.enabled ? 'bg-oxford-primary' : 'bg-slate-300'}`}
-                >
-                  <div className={`w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${item.enabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-                
-                {/* Editable Label */}
-                <input 
-                  type="text"
-                  value={item.label}
-                  onChange={(e) => handleUpdateItem(item.id, 'label', e.target.value)}
-                  disabled={!item.enabled}
-                  className={`flex-1 text-sm font-semibold border-b border-transparent focus:border-oxford-primary focus:bg-slate-50 outline-none transition-colors ${item.enabled ? 'text-slate-800' : 'text-slate-500'}`}
-                  placeholder={t.placeholders.rubricName}
-                />
-
-                {/* Slider (Slim) */}
-                {item.enabled && (
-                  <div className="w-24 md:w-48 flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="10"
-                      value={item.weight}
-                      onChange={(e) => handleUpdateItem(item.id, 'weight', parseInt(e.target.value))}
-                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-oxford-primary"
-                    />
-                    <span className="w-6 text-center text-xs font-bold text-oxford-primary bg-slate-100 rounded px-1 py-0.5">{item.weight}</span>
+                {/* Tooltip on Hover */}
+                {item.description && (
+                  <div className="absolute left-10 -top-8 bg-[#0B1120] text-white text-xs p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 w-64 shadow-xl border border-slate-700">
+                    {item.description}
+                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-[#0B1120] rotate-45"></div>
                   </div>
                 )}
 
-                {/* Delete (Subtle) */}
+                {/* Toggle Switch (Compact) */}
                 <button 
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                    title={t.rubricUI.delete}
+                  onClick={() => handleToggleItem(item.id)}
+                  className={`w-10 h-6 rounded-full p-1 transition-colors duration-200 ease-in-out flex items-center flex-shrink-0 ${item.enabled ? 'bg-oxford-primary' : 'bg-slate-300'}`}
                 >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${item.enabled ? 'translate-x-4' : 'translate-x-0'}`} />
                 </button>
+                
+                {/* Editable Label */}
+                <div className="flex-1 min-w-0">
+                    <input 
+                      type="text"
+                      value={item.label}
+                      onChange={(e) => handleUpdateItem(item.id, 'label', e.target.value)}
+                      disabled={!item.enabled}
+                      className={`w-full text-base font-medium bg-transparent border-none focus:ring-0 outline-none truncate transition-colors ${item.enabled ? 'text-slate-800' : 'text-slate-400'}`}
+                      placeholder={t.placeholders.rubricName}
+                    />
+                    {item.description && <p className="text-xs text-slate-400 truncate hidden md:block">{item.description}</p>}
+                </div>
+
+                {/* Redesigned Weighting Controls */}
+                <div className={`flex items-center gap-4 transition-opacity duration-200 ml-4 ${item.enabled ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                    
+                    {/* Visual Weight Slider with Badge */}
+                    <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-2 border border-slate-200">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.rubricUI.weight}</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={item.weight}
+                        onChange={(e) => handleUpdateItem(item.id, 'weight', parseInt(e.target.value))}
+                        className={`w-24 h-2 rounded-lg appearance-none cursor-pointer transition-colors ${getSliderColorClass(item.weight)}`}
+                      />
+                      <div className={`px-2 py-1 min-w-[60px] flex items-center justify-center rounded-md border font-bold text-xs uppercase ${getBadgeColorClass(item.weight)}`}>
+                          {getWeightLabel(item.weight)}
+                      </div>
+                    </div>
+
+                    {/* Delete (Subtle) */}
+                    <button 
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="text-slate-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
+                      title={t.rubricUI.delete}
+                  >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
               </div>
             ))}
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-4">
-                 <button 
-                     onClick={handleAddCustomItem}
-                     className="text-xs font-bold text-slate-500 hover:text-oxford-primary border border-dashed border-slate-300 hover:border-oxford-primary px-3 py-1.5 rounded transition-colors"
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-100">
+                  <button 
+                      onClick={handleAddCustomItem}
+                      className="text-xs font-bold text-slate-500 hover:text-oxford-primary hover:bg-slate-50 border border-dashed border-slate-300 hover:border-oxford-primary px-3 py-1.5 rounded transition-all flex items-center gap-1"
                   >
-                    + {t.rubricUI.addCriterion}
-                 </button>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-500">{t.rubricUI.total}:</span>
-                    <span className="text-lg font-bold text-oxford-primary">{totalRubricWeight}</span>
-                </div>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    {t.rubricUI.addCriterion}
+                  </button>
             </div>
           </div>
-        )}
-
-        {/* Advanced Rubric UI (Slimmed Down) */}
-        {rubric.type === 'advanced' && (
-          <div className="space-y-3">
-            {rubric.items.map((item, idx) => (
-              <div key={item.id} className="bg-white border border-slate-200 rounded-md p-3 shadow-sm hover:border-slate-300 transition-colors">
-                 
-                 {/* Top Row: Controls & Main Inputs */}
-                 <div className="flex items-start gap-4 mb-2">
-                    {/* Move/Drag Handles */}
-                    <div className="flex flex-col gap-0.5 mt-2">
-                        <button onClick={() => handleMoveItem(idx, 'up')} disabled={idx === 0} className="text-slate-400 hover:text-oxford-primary disabled:opacity-20"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 15l-6-6-6 6"/></svg></button>
-                        <button onClick={() => handleMoveItem(idx, 'down')} disabled={idx === rubric.items.length - 1} className="text-slate-400 hover:text-oxford-primary disabled:opacity-20"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg></button>
-                    </div>
-
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Name Input */}
-                        <div className="md:col-span-3">
-                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">{t.rubricUI.name}</label>
-                            <input
-                                type="text"
-                                className="w-full text-sm font-medium text-slate-800 border-b border-slate-200 focus:border-oxford-primary outline-none py-1 bg-transparent transition-colors"
-                                placeholder={t.placeholders.rubricName}
-                                value={item.label}
-                                onChange={(e) => handleUpdateItem(item.id, 'label', e.target.value)}
-                            />
-                        </div>
-                        {/* Weight Input */}
-                        <div>
-                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">{t.rubricUI.maxBall}</label>
-                            <input
-                                type="number"
-                                className="w-full text-sm font-bold text-oxford-primary border-b border-slate-200 focus:border-oxford-primary outline-none py-1 bg-transparent transition-colors"
-                                value={item.weight}
-                                onChange={(e) => handleUpdateItem(item.id, 'weight', parseInt(e.target.value) || 0)}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Delete */}
-                    <button 
-                        onClick={() => handleRemoveItem(item.id)}
-                        className="text-slate-300 hover:text-red-500 mt-2 p-1"
-                    >
-                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+        ) : (
+          /* Custom Instructions Textarea */
+          <div className="animate-fade-in">
+             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+               <div className="flex gap-3">
+                 <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
                  </div>
-
-                 {/* Bottom Row: Description */}
-                 <div className="pl-7">
-                    <textarea
-                       className="w-full text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded p-2 focus:ring-1 focus:ring-oxford-primary/20 focus:border-oxford-primary/20 outline-none h-12 min-h-[3rem] resize-y placeholder:italic"
-                       placeholder={t.placeholders.rubricDesc}
-                       value={item.description}
-                       onChange={(e) => handleUpdateItem(item.id, 'description', e.target.value)}
-                    />
+                 <div className="text-sm text-yellow-700">
+                   <p className="font-bold mb-1">Teacher Instructions</p>
+                   <p>Paste your "me'zons", grading rules, or specific criteria here. The AI will strictly prioritize these instructions over its default logic.</p>
                  </div>
-              </div>
-            ))}
-
-            <div className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t border-slate-100 z-10">
-              <button 
-                 onClick={handleAddCustomItem}
-                 className="px-4 py-2 bg-white border border-dashed border-slate-300 text-slate-600 text-sm font-bold rounded hover:border-oxford-primary hover:text-oxford-primary hover:bg-slate-50 transition w-full md:w-auto"
-              >
-                + {t.rubricUI.addCriterion}
-              </button>
-              
-              <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded border border-slate-200">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.rubricUI.total}:</span>
-                <span className="text-xl font-bold text-oxford-primary">{totalRubricWeight}</span>
-              </div>
-            </div>
+               </div>
+             </div>
+             <textarea
+                className="w-full h-48 p-4 border border-slate-300 rounded-md focus:ring-2 focus:ring-oxford-primary focus:border-transparent outline-none transition font-mono text-sm"
+                placeholder={t.placeholders.customRubric}
+                value={rubric.customInstructions || ''}
+                onChange={(e) => setRubric({ ...rubric, customInstructions: e.target.value })}
+             />
           </div>
         )}
       </section>
