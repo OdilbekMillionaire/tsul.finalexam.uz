@@ -81,6 +81,13 @@ export const TRANSLATIONS = {
     chatGreeting: "Hello! I am Exam AI. I have analyzed the student's performance. Ask me anything about the grading rationale, specific laws, or how to improve.",
     typeMessage: "Ask about the results...",
     send: "Send",
+    smartImport: {
+      title: "Smart Import",
+      description: "Paste your entire exam paper (Case + Questions) here. The AI will automatically separate them.",
+      placeholder: "Paste the full text here...",
+      button: "Auto-Detect Case & Questions",
+      processing: "Analyzing Exam Content..."
+    },
     rubricUI: {
       weight: "Importance",
       addCriterion: "Add Criterion",
@@ -190,6 +197,13 @@ export const TRANSLATIONS = {
     chatGreeting: "Привет! Я Exam AI. Я проанализировал результаты. Спрашивайте об оценках, ошибках или способах улучшения.",
     typeMessage: "Задайте вопрос по результатам...",
     send: "Отправить",
+    smartImport: {
+      title: "Умный импорт",
+      description: "Вставьте полный текст экзамена (Фабула + Вопросы) сюда. ИИ автоматически разделит их.",
+      placeholder: "Вставьте полный текст здесь...",
+      button: "Авто-определение (Фабула и Вопросы)",
+      processing: "Анализ текста экзамена..."
+    },
     rubricUI: {
       weight: "Важность",
       addCriterion: "Добавить критерий",
@@ -299,6 +313,13 @@ export const TRANSLATIONS = {
     chatGreeting: "Salom! Men Exam AI man. Natijalarni tahlil qildim. Baholash, xatolar yoki yaxshilanish yo'llari haqida so'rang.",
     typeMessage: "Natijalar haqida so'rang...",
     send: "Yuborish",
+    smartImport: {
+      title: "Aqlli Import",
+      description: "Butun imtihon matnini (Fabula + Savollar) shu yerga tashlang. AI ularni avtomatik ajratib beradi.",
+      placeholder: "To'liq matnni shu yerga qo'ying...",
+      button: "Avto-Aniqlash (Fabula va Savollar)",
+      processing: "Imtihon matni tahlil qilinmoqda..."
+    },
     rubricUI: {
       weight: "Muhimlik",
       addCriterion: "Mezon qo'shish",
@@ -408,6 +429,13 @@ export const TRANSLATIONS = {
     chatGreeting: "Салом! Мен Exam AI ман. Натижаларни таҳлил қилдим. Баҳолаш, хатолар ёки яхшиланиш йўллари ҳақида сўранг.",
     typeMessage: "Натижалар ҳақида сўранг...",
     send: "Юбориш",
+    smartImport: {
+      title: "Ақлли Импорт",
+      description: "Бутун имтиҳон матнини (Фабула + Саволлар) шу ерга ташланг. AI уларни автоматик ажратиб беради.",
+      placeholder: "Тўлиқ матнни шу ерга қўйинг...",
+      button: "Авто-Аниқлаш (Фабула ва Саволлар)",
+      processing: "Имтиҳон матни таҳлил қилинмоқда..."
+    },
     rubricUI: {
       weight: "Муҳимлик",
       addCriterion: "Mezon qo'shish",

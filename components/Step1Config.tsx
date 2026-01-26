@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
 import { Question, RubricItem } from '../types';
+import { parseExamContent } from '../services/geminiService';
 
 const Step1Config: React.FC = () => {
   const { 
@@ -17,6 +18,10 @@ const Step1Config: React.FC = () => {
   } = useExamContext();
 
   const t = TRANSLATIONS[language];
+
+  // --- Smart Import State ---
+  const [rawExamText, setRawExamText] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
 
   // --- Undo/Redo History Logic ---
   const [history, setHistory] = useState<{ c: string; q: Question[] }[]>([]);
@@ -175,6 +180,36 @@ const Step1Config: React.FC = () => {
      setRubric({ ...rubric, type });
   };
 
+  // --- Smart Import Handler ---
+  const handleSmartImport = async () => {
+    if (!rawExamText.trim()) return;
+    setIsParsing(true);
+    
+    const result = await parseExamContent(rawExamText);
+    
+    if (result.masterCase) {
+        setMasterCase(result.masterCase);
+    }
+
+    if (result.questions && result.questions.length > 0) {
+        const newQuestions = result.questions.map(qText => ({
+            id: crypto.randomUUID(),
+            text: qText,
+            maxWeight: 10 // Default weight, user can edit
+        }));
+        setQuestions(newQuestions);
+        pushHistory(result.masterCase || masterCase, newQuestions);
+    } else {
+        // Even if no questions found, push history if case changed
+        if (result.masterCase) {
+           pushHistory(result.masterCase, questions);
+        }
+    }
+
+    setIsParsing(false);
+    // Optionally clear raw text or keep it
+  };
+
   return (
     <div className="space-y-8 animate-fade-in relative">
 
@@ -237,6 +272,50 @@ const Step1Config: React.FC = () => {
             </button>
         </div>
       </div>
+
+      {/* SMART IMPORT SECTION - NEW FEATURE */}
+      <section className="bg-[#0B1120] p-6 rounded-xl shadow-lg border border-slate-800 relative overflow-hidden">
+         {/* Decorative Background */}
+         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F59E0B] opacity-5 rounded-full blur-3xl pointer-events-none"></div>
+         
+         <div className="relative z-10">
+            <h2 className="text-xl font-serif font-bold text-white mb-2 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                {t.smartImport.title}
+            </h2>
+            <p className="text-slate-400 text-sm mb-4">
+                {t.smartImport.description}
+            </p>
+            
+            <textarea
+                className="w-full h-32 p-4 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition text-sm mb-4"
+                placeholder={t.smartImport.placeholder}
+                value={rawExamText}
+                onChange={(e) => setRawExamText(e.target.value)}
+            />
+            
+            <button 
+                onClick={handleSmartImport}
+                disabled={isParsing || !rawExamText.trim()}
+                className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B1120] font-bold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {isParsing ? (
+                    <>
+                        <svg className="animate-spin h-5 w-5 text-[#0B1120]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {t.smartImport.processing}
+                    </>
+                ) : (
+                    <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                        {t.smartImport.button}
+                    </>
+                )}
+            </button>
+         </div>
+      </section>
 
       {/* Master Case Section */}
       <section className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">

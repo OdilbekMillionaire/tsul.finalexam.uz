@@ -5,6 +5,16 @@ import { TRANSLATIONS } from "../constants";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Model Constants
+const PRIMARY_MODEL = "gemini-3-pro-preview";
+const FALLBACK_MODEL = "gemini-3-flash-preview";
+
+// Helper to check for quota errors
+const isQuotaError = (error: any): boolean => {
+  const msg = error?.message || JSON.stringify(error);
+  return msg.includes('429') || msg.toLowerCase().includes('quota') || msg.includes('Resource has been exhausted');
+};
+
 // Define the response schema for structured grading
 const assessmentSchema: Schema = {
   type: Type.OBJECT,
@@ -38,7 +48,6 @@ export const assessAnswer = async (
   studentAnswer: string,
   language: string
 ): Promise<AssessmentResult> => {
-  const modelId = "gemini-3-pro-preview";
 
   const prompt = `
     You are a strict and highly knowledgeable Law Professor at TSUL (Tashkent State University of Law).
@@ -63,17 +72,34 @@ export const assessAnswer = async (
     - **IMPORTANT:** Do NOT use markdown asterisks (*) for bolding or italics in your 'rationale' or 'roadmap'. Use plain text or bullet points (-) only. The output system does not support markdown bolding.
   `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: modelId,
+  const config = {
+    tools: [{ googleSearch: {} }], // Enable grounding for lex.uz lookups
+    responseMimeType: "application/json",
+    responseSchema: assessmentSchema,
+    temperature: 0.2, // Low temperature for consistent, academic grading
+  };
+
+  const attemptGeneration = async (model: string) => {
+    return await ai.models.generateContent({
+      model,
       contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }], // Enable grounding for lex.uz lookups
-        responseMimeType: "application/json",
-        responseSchema: assessmentSchema,
-        temperature: 0.2, // Low temperature for consistent, academic grading
-      },
+      config,
     });
+  };
+
+  try {
+    // Try Primary Model
+    let response;
+    try {
+      response = await attemptGeneration(PRIMARY_MODEL);
+    } catch (error) {
+      if (isQuotaError(error)) {
+        console.warn(`Primary model ${PRIMARY_MODEL} quota exceeded. Falling back to ${FALLBACK_MODEL}.`);
+        response = await attemptGeneration(FALLBACK_MODEL);
+      } else {
+        throw error;
+      }
+    }
 
     const responseText = response.text || "{}";
     const parsedData = JSON.parse(responseText);
@@ -97,7 +123,7 @@ export const assessAnswer = async (
     // Return a fallback error state
     return {
       score: 0,
-      rationale: "System Error: Unable to complete AI assessment. Please try again.",
+      rationale: "System Error: Unable to complete AI assessment. Please try again later.",
       roadmap: "N/A",
       citations: [],
       groundingUrls: []
@@ -111,8 +137,6 @@ export const getOverallAssessment = async (
   answers: Record<string, StudentAnswer>,
   language: string
 ): Promise<string> => {
-  const modelId = "gemini-3-pro-preview";
-
   const formattedQA = questions.map((q, i) => `
     Q${i+1}: ${q.text} (Max: ${q.maxWeight})
     Student Answer: ${answers[q.id]?.text || "No Answer"}
@@ -141,14 +165,30 @@ export const getOverallAssessment = async (
     Keep it encouraging but academically rigorous.
   `;
 
+  const config = {
+    temperature: 0.4,
+  };
+
   try {
-    const response = await ai.models.generateContent({
-      model: modelId,
-      contents: prompt,
-      config: {
-        temperature: 0.4,
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: PRIMARY_MODEL,
+        contents: prompt,
+        config
+      });
+    } catch (error) {
+      if (isQuotaError(error)) {
+         console.warn(`Primary model ${PRIMARY_MODEL} quota exceeded. Falling back to ${FALLBACK_MODEL}.`);
+         response = await ai.models.generateContent({
+            model: FALLBACK_MODEL,
+            contents: prompt,
+            config
+         });
+      } else {
+        throw error;
       }
-    });
+    }
     return response.text || "Could not generate feedback.";
   } catch (e) {
     console.error(e);
@@ -162,7 +202,6 @@ export const chatWithAI = async (
   contextData: { masterCase: string; questions: Question[]; answers: Record<string, StudentAnswer> },
   language: string
 ): Promise<string> => {
-  const modelId = "gemini-3-pro-preview";
 
   const contextStr = `
     Master Case: ${contextData.masterCase.substring(0, 1000)}...
@@ -182,17 +221,90 @@ export const chatWithAI = async (
   Do not use markdown bolding (*).
   Be helpful and explain why they got the score they did if asked.`;
 
-  try {
+  const attemptChat = async (model: string) => {
     const chat = ai.chats.create({
-      model: modelId,
+      model: model,
       history: chatHistory,
       config: { systemInstruction }
     });
+    return await chat.sendMessage({ message: newMessage });
+  };
 
-    const result = await chat.sendMessage({ message: newMessage });
+  try {
+    let result;
+    try {
+      result = await attemptChat(PRIMARY_MODEL);
+    } catch (error) {
+      if (isQuotaError(error)) {
+        console.warn(`Primary model ${PRIMARY_MODEL} quota exceeded. Falling back to ${FALLBACK_MODEL}.`);
+        result = await attemptChat(FALLBACK_MODEL);
+      } else {
+        throw error;
+      }
+    }
     return result.text || "I didn't catch that.";
   } catch (e) {
     console.error(e);
     return "Sorry, I cannot chat right now.";
+  }
+};
+
+// NEW FUNCTION: Smart Import to split Case and Questions
+export const parseExamContent = async (rawText: string): Promise<{ masterCase: string; questions: string[] }> => {
+  const prompt = `
+    Analyze the following raw text which contains a Legal Case Fact Pattern (Scenario) and a list of Questions.
+    
+    Task:
+    1. Extract the main "Master Case" or "Fact Pattern" text.
+    2. Extract the individual "Questions" as a list. Remove any numbering (1., 2., a), b)) from the start of questions.
+    
+    Raw Text:
+    "${rawText}"
+    
+    Return JSON:
+    {
+      "masterCase": "The full scenario text...",
+      "questions": ["Question 1 text", "Question 2 text"]
+    }
+  `;
+
+  const schema: Schema = {
+    type: Type.OBJECT,
+    properties: {
+      masterCase: { type: Type.STRING },
+      questions: { type: Type.ARRAY, items: { type: Type.STRING } }
+    },
+    required: ["masterCase", "questions"]
+  };
+
+  const attemptParse = async (model: string) => {
+     return await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schema
+      }
+    });
+  };
+
+  try {
+    let response;
+    try {
+       response = await attemptParse(PRIMARY_MODEL);
+    } catch (error) {
+       if (isQuotaError(error)) {
+          console.warn(`Primary model ${PRIMARY_MODEL} quota exceeded for parsing. Falling back to ${FALLBACK_MODEL}.`);
+          response = await attemptParse(FALLBACK_MODEL);
+       } else {
+         throw error;
+       }
+    }
+
+    const text = response.text || "{}";
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse exam content", e);
+    return { masterCase: "", questions: [] };
   }
 };
