@@ -25,11 +25,11 @@ const assessmentSchema: Schema = {
     },
     rationale: {
       type: Type.STRING,
-      description: "A detailed explanation of why the score was given, highlighting strengths and weaknesses. Do NOT use markdown bolding.",
+      description: "A detailed explanation of why the score was given, explicitly referencing the criteria met or missed from the rubric.",
     },
     roadmap: {
       type: Type.STRING,
-      description: "Constructive feedback on what legal logic or facts were missing. Do NOT use markdown bolding.",
+      description: "Constructive feedback on exactly what legal logic or facts were missing based on the strict grading criteria.",
     },
     citations: {
       type: Type.ARRAY,
@@ -50,7 +50,7 @@ export const assessAnswer = async (
 ): Promise<AssessmentResult> => {
 
   const prompt = `
-    You are a strict and highly knowledgeable Law Professor at TSUL (Tashkent State University of Law).
+    You are a STRICT, SKEPTICAL, and highly knowledgeable Law Professor at TSUL (Tashkent State University of Law).
     
     Task: Assess the student's answer to the provided exam question based on the Master Case and Rubric.
     
@@ -62,21 +62,23 @@ export const assessAnswer = async (
     3. **Rubric/Criteria:** "${rubric}"
     4. **Student Answer:** "${studentAnswer}"
     
-    Instructions:
-    - Evaluate ONLY this specific answer slot.
-    - Be rigorous. Check for legal accuracy.
-    - Search specifically for Uzbekistan Law (Lex.uz) to find relevant articles.
-    - Provide a score between 0 and ${maxWeight}.
-    - Ensure consistency with the facts in the Master Case.
-    - 'citations' must be specific Article numbers and Code names from Uzbekistan legislation.
-    - **IMPORTANT:** Do NOT use markdown asterisks (*) for bolding or italics in your 'rationale' or 'roadmap'. Use plain text or bullet points (-) only. The output system does not support markdown bolding.
+    STRICT GRADING PROTOCOLS:
+    1. **Skepticism**: Assume the answer is incorrect or incomplete until the student PROVES they understand the law. Do not give "benefit of the doubt".
+    2. **No Grade Inflation**: It is rare for a student to get full marks. A generic answer deserves a low score (e.g., 30-40%). A good answer gets 70-80%. Only perfect, legally precise answers get 90%+.
+    3. **Rubric Hierarchy**: 
+       - If "Custom Instructions" are provided, follow them FIRST.
+       - HOWEVER, you must ALSO check for fundamental legal competence (Norm Identification, Fact Application, Logic). If the student writes a "correct" answer according to custom rules but makes a fundamental error in legal logic (e.g., citing a repealed law, missing the main issue), DEDUCT POINTS heavily.
+    4. **Normalization**: Return a score out of ${maxWeight}. 
+    5. **Lex.uz**: Verify citations. If they cite Article 45 but the text corresponds to Article 49, mark it wrong.
+    
+    Your Output Rationale must explicitly state: "Points deducted because..."
   `;
 
   const config = {
     tools: [{ googleSearch: {} }], // Enable grounding for lex.uz lookups
     responseMimeType: "application/json",
     responseSchema: assessmentSchema,
-    temperature: 0.2, // Low temperature for consistent, academic grading
+    temperature: 0.1, // Very low temperature for maximum strictness and consistency
   };
 
   const attemptGeneration = async (model: string) => {

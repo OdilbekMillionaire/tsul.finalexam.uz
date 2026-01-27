@@ -10,7 +10,7 @@ import Plans from './components/Plans';
 import Login from './components/Login';
 import Profile from './components/Profile';
 import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES, ChatMessage, SubscriptionTier } from './types';
-import { TRANSLATIONS, RUBRIC_TEMPLATES } from './constants';
+import { TRANSLATIONS, RUBRIC_TEMPLATES, FREE_DAILY_LIMIT } from './constants';
 import { getActiveSubscription } from './services/subscriptionService';
 import { authService } from './services/authService';
 
@@ -175,6 +175,19 @@ const App: React.FC = () => {
   const t = TRANSLATIONS[language];
 
   // Actions
+  
+  // Custom setter for Master Case to clear feedback on change
+  const handleSetMasterCase = (text: string) => {
+    setMasterCase(text);
+    setOverallFeedback(null);
+  };
+
+  // Custom setter for Questions to clear feedback on change
+  const handleSetQuestions = (qs: Question[]) => {
+    setQuestions(qs);
+    setOverallFeedback(null);
+  };
+
   const updateAnswer = (questionId: string, text: string) => {
     setAnswers(prev => ({
       ...prev,
@@ -185,6 +198,8 @@ const App: React.FC = () => {
         isAssessing: prev[questionId]?.isAssessing || false
       }
     }));
+    // Clear overall feedback if answers change
+    setOverallFeedback(null);
   };
 
   const setAssessment = (questionId: string, result: any) => {
@@ -192,6 +207,8 @@ const App: React.FC = () => {
       ...prev,
       [questionId]: { ...prev[questionId], assessment: result }
     }));
+    // Clear overall feedback if assessment results change
+    setOverallFeedback(null);
   };
 
   const setAssessingStatus = (questionId: string, isAssessing: boolean) => {
@@ -236,6 +253,7 @@ const App: React.FC = () => {
        setAnswers({});
        setOverallFeedback(null);
        setChatHistory([]);
+       window.scrollTo(0, 0);
     }
   };
 
@@ -249,7 +267,7 @@ const App: React.FC = () => {
   // Usage Limit Logic
   const checkUsage = (): boolean => {
     if (subscriptionTier !== 'free') return true;
-    return dailyUsage < 3;
+    return dailyUsage < FREE_DAILY_LIMIT;
   };
 
   const incrementUsage = () => {
@@ -271,11 +289,12 @@ const App: React.FC = () => {
     user,
     isDarkMode,
     toggleTheme,
+    dailyUsage,
     setView,
     setStep,
     setLanguage,
-    setMasterCase,
-    setQuestions,
+    setMasterCase: handleSetMasterCase,
+    setQuestions: handleSetQuestions,
     setRubric,
     updateAnswer,
     setAssessment,
@@ -335,6 +354,16 @@ const App: React.FC = () => {
                         {subscriptionTier === 'yearly' && 'ELITE'}
                         {subscriptionTier === 'free' && 'FREE'}
                     </span>
+                    
+                    {/* Visual Credit Counter for Free Tier */}
+                    {subscriptionTier === 'free' && (
+                        <div className="hidden sm:flex items-center gap-1 ml-2 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700" title="Daily AI Credits Remaining">
+                            <span className="text-xs">⚡</span>
+                            <span className={`text-[10px] font-bold ${dailyUsage >= FREE_DAILY_LIMIT ? 'text-red-500' : 'text-slate-600 dark:text-slate-400'}`}>
+                                {FREE_DAILY_LIMIT - dailyUsage}/{FREE_DAILY_LIMIT}
+                            </span>
+                        </div>
+                    )}
                 </div>
               </div>
             </div>

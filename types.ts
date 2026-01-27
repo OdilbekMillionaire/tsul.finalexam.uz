@@ -74,6 +74,9 @@ export interface ExamContextState {
   isDarkMode: boolean;
   toggleTheme: () => void;
   
+  // Usage
+  dailyUsage: number;
+  
   setView: (view: View) => void;
   setStep: (step: 1 | 2 | 3) => void;
   setLanguage: (lang: Language) => void;

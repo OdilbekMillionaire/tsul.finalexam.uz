@@ -1,6 +1,8 @@
 
 import { Language, Rubric, Plan } from './types';
 
+export const FREE_DAILY_LIMIT = 10;
+
 export const TRANSLATIONS = {
   en: {
     nav: {
@@ -146,6 +148,13 @@ export const TRANSLATIONS = {
       weaknesses: "Key Weaknesses in Legal Reasoning",
       tips: "General Growth Tips for the Future"
     },
+    limit: {
+      title: "Daily Limit Reached",
+      message: "You've been working hard! You have used your 10 free AI credits for today.",
+      subMessage: "To continue assessing students with unlimited access, please upgrade to a Pro plan.",
+      upgrade: "Upgrade to Pro",
+      cancel: "I'll wait until tomorrow"
+    },
     plans: {
       title: "Choose Your Plan",
       subtitle: "Invest in your legal career with the best AI tools.",
@@ -157,7 +166,7 @@ export const TRANSLATIONS = {
       monthly: "Monthly Pro",
       yearly: "Yearly Elite",
       features: {
-        basic_limit: "3 AI Assessments per day",
+        basic_limit: "10 AI Assessments per day",
         unlimited: "Unlimited Assessments",
         export: "PDF Export & Printing",
         support: "Priority 24/7 Support",
@@ -329,6 +338,13 @@ export const TRANSLATIONS = {
       weaknesses: "Ключевые недостатки в юридической аргументации",
       tips: "Общие советы по развитию на будущее"
     },
+    limit: {
+      title: "Дневной лимит исчерпан",
+      message: "Вы отлично поработали! Вы использовали свои 10 бесплатных AI кредитов на сегодня.",
+      subMessage: "Чтобы продолжить проверку студентов без ограничений, перейдите на Pro тариф.",
+      upgrade: "Перейти на Pro",
+      cancel: "Подожду до завтра"
+    },
     plans: {
       title: "Выберите тариф",
       subtitle: "Инвестируйте в свою юридическую карьеру с лучшими AI-инструментами.",
@@ -340,7 +356,7 @@ export const TRANSLATIONS = {
       monthly: "Месячный PRO",
       yearly: "Годовой Elite",
       features: {
-        basic_limit: "3 AI оценки в день",
+        basic_limit: "10 AI оценок в день",
         unlimited: "Безлимитные оценки",
         export: "Экспорт в PDF и печать",
         support: "Приоритетная поддержка 24/7",
@@ -512,6 +528,13 @@ export const TRANSLATIONS = {
       weaknesses: "Huquqiy asoslashdagi yoki qonunni qo'llashdagi asosiy kamchiliklar",
       tips: "Kelajak uchun umumiy rivojlanish tavsiyalari"
     },
+    limit: {
+      title: "Kunlik limit tugadi",
+      message: "Siz ajoyib ishlayapsiz! Bugungi 10 ta bepul AI kreditini ishlatib bo'ldingiz.",
+      subMessage: "Talabalarni cheklovsiz tekshirishni davom ettirish uchun PRO tarifiga o'ting.",
+      upgrade: "PRO ga o'tish",
+      cancel: "Ertagacha kutaman"
+    },
     plans: {
       title: "Tarifni tanlang",
       subtitle: "Yuridik karyerangizga eng yaxshi AI vositalari bilan sarmoya kiriting.",
@@ -523,7 +546,7 @@ export const TRANSLATIONS = {
       monthly: "Oylik PRO",
       yearly: "Yillik Elite",
       features: {
-        basic_limit: "Kuniga 3 ta AI baholash",
+        basic_limit: "Kuniga 10 ta AI baholash",
         unlimited: "Cheksiz baholash",
         export: "PDF eksport va chop etish",
         support: "24/7 Tezkor qo'llab-quvvatlash",
@@ -695,6 +718,13 @@ export const TRANSLATIONS = {
       weaknesses: "Ҳуқуқий асослашдаги ёки қонунни қўллашдаги асосий камчиликлар",
       tips: "Келажак учун умумий ривожланиш тавсиялари"
     },
+    limit: {
+      title: "Кунлик лимит тугади",
+      message: "Сиз ажойиб ишлаяпсиз! Бугунги 10 та бепул AI кредитини ишлатиб бўлдингиз.",
+      subMessage: "Талабаларни чекловсиз текширишни давом эттириш учун PRO тарифига ўтинг.",
+      upgrade: "PRO га ўтиш",
+      cancel: "Эртагача кутаман"
+    },
     plans: {
       title: "Тарифни танланг",
       subtitle: "Юридик карьерангизга энг яхши AI воситалари билан сармоя киритинг.",
@@ -706,7 +736,7 @@ export const TRANSLATIONS = {
       monthly: "Ойлик PRO",
       yearly: "Йиллик Elite",
       features: {
-        basic_limit: "Кунига 3 та AI баҳолаш",
+        basic_limit: "Кунига 10 та AI баҳолаш",
         unlimited: "Чексиз баҳолаш",
         export: "PDF экспорт ва чоп этиш",
         support: "24/7 Тезкор қўллаб-қувватлаш",

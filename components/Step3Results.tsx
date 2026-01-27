@@ -4,6 +4,7 @@ import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { getOverallAssessment, chatWithAI } from '../services/geminiService';
+import LimitModal from './LimitModal';
 
 const Step3Results: React.FC = () => {
   const { 
@@ -16,7 +17,9 @@ const Step3Results: React.FC = () => {
     setOverallFeedback,
     chatHistory,
     addChatMessage,
-    isDarkMode
+    isDarkMode,
+    checkUsage,
+    incrementUsage
   } = useExamContext();
   
   const t = TRANSLATIONS[language];
@@ -24,6 +27,7 @@ const Step3Results: React.FC = () => {
   const [chatInput, setChatInput] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSendingChat, setIsSendingChat] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll chat
@@ -78,10 +82,18 @@ const Step3Results: React.FC = () => {
   };
 
   const handleGenerateOverall = async () => {
+    if (!checkUsage()) {
+       setShowLimitModal(true);
+       return;
+    }
+
     setIsGeneratingFeedback(true);
     const feedback = await getOverallAssessment(masterCase, questions, answers, language);
     setOverallFeedback(feedback);
     setIsGeneratingFeedback(false);
+    
+    // Increment usage upon successful generation
+    incrementUsage();
   };
 
   const handleSendChat = async (e?: React.FormEvent) => {
@@ -107,6 +119,8 @@ const Step3Results: React.FC = () => {
   return (
     <div className="space-y-12 animate-fade-in pb-20 relative print:p-0">
       
+      {showLimitModal && <LimitModal onClose={() => setShowLimitModal(false)} />}
+
       {/* Print Styles */}
       <style>
         {`

@@ -4,6 +4,7 @@ import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
 import { assessAnswer } from '../services/geminiService';
 import { Rubric } from '../types';
+import LimitModal from './LimitModal';
 
 const Step2Execution: React.FC = () => {
   const { 
@@ -23,33 +24,48 @@ const Step2Execution: React.FC = () => {
   } = useExamContext();
 
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const t = TRANSLATIONS[language];
 
   // Helper to turn the rubric object into a prompt string
   const formatRubricForAI = (rubric: Rubric): string => {
+    // HYBRID MODE: Custom Instructions + Baseline Standards
     if (rubric.type === 'custom') {
-       return `CUSTOM GRADING INSTRUCTIONS FROM TEACHER:\n${rubric.customInstructions}\n\nNOTE TO AI: YOU MUST FOLLOW THESE INSTRUCTIONS ABOVE STRICTLY. IGNORE DEFAULT GRADING PATTERNS IF THEY CONFLICT WITH THESE INSTRUCTIONS.`;
+       return `
+    GRADING MODE: CUSTOM INSTRUCTIONS WITH BASELINE ACADEMIC STANDARDS.
+    
+    1. **SPECIFIC TEACHER INSTRUCTIONS (Highest Priority)**:
+    "${rubric.customInstructions}"
+    
+    2. **BASELINE LEGAL STANDARDS (Mandatory)**:
+    Even if not explicitly mentioned in the teacher instructions above, you MUST assess the student on these three pillars unless the instructions explicitly forbid it:
+    a) **Legal Issue Identification**: Did they cite the correct specific article/norm?
+    b) **Application of Law**: Did they apply the rule to the specific facts of the Master Case (not just abstract theory)?
+    c) **Logical Reasoning**: Is the conclusion derived logically from the premise?
+    
+    SCORING RULE: If the student fails the Baseline Legal Standards (e.g., wrong law or no logic), they cannot receive a high score, even if they followed the custom instructions.
+       `;
     }
 
-    let output = `Grading Rubric Type: ${rubric.type}\nCriteria:\n`;
+    // STANDARD MODE
+    let output = `Grading Rubric (Type: ${rubric.type}). This is a strict scoring guide:\n`;
     const activeItems = rubric.items.filter(i => i.enabled);
     
+    // Calculate total points within rubric
+    const rubricTotal = activeItems.reduce((acc, i) => acc + i.weight, 0);
+
     activeItems.forEach((item, idx) => {
-      output += `${idx + 1}. ${item.label} (Weight/Max: ${item.weight}). Description: ${item.description || 'N/A'}\n`;
+      output += `${idx + 1}. Criterion: "${item.label}"\n   - Description: ${item.description || 'N/A'}\n   - Weight in Rubric: ${item.weight} points (out of ${rubricTotal})\n`;
     });
     
-    // Add total context
-    const total = activeItems.reduce((acc, i) => acc + i.weight, 0);
-    output += `\nTotal Rubric Weight: ${total}. Scale student score accordingly relative to Question Max Weight.`;
+    output += `\nINSTRUCTION: Calculate the raw score out of ${rubricTotal} first based on the criteria above. Then, convert/scale that score mathematically to match the Question's Max Points provided in the prompt context.`;
     return output;
   };
 
   const handleAssess = async (questionId: string) => {
     // 1. CHECK USAGE LIMIT
     if (!checkUsage()) {
-       if (confirm("You have reached your daily limit of 3 free AI assessments. Upgrade to Pro for unlimited grading?")) {
-           setView('plans');
-       }
+       setShowLimitModal(true);
        return;
     }
 
@@ -92,6 +108,8 @@ const Step2Execution: React.FC = () => {
 
   return (
     <div className="space-y-12 animate-fade-in relative">
+       {showLimitModal && <LimitModal onClose={() => setShowLimitModal(false)} />}
+       
        {/* Case Reference (Collapsible or sticky could be nice, keeping it simple for now) */}
        <div className="bg-oxford-primary/5 dark:bg-slate-800 p-4 rounded border border-oxford-primary/10 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 mb-8 transition-colors">
         <h3 className="font-bold text-oxford-primary dark:text-white mb-2">Reference Case:</h3>
@@ -120,9 +138,10 @@ const Step2Execution: React.FC = () => {
           )}
         </button>
 
+        {/* Clean Answers Button (Visual location matched to user request) */}
         <button 
            onClick={resetAnswers}
-           className="text-sm font-bold text-oxford-secondary hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+           className="text-sm font-bold text-oxford-secondary hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-dashed border-red-200 dark:border-red-900 px-4 py-2 rounded-lg shadow-sm hover:bg-red-50 dark:hover:bg-slate-700 transition"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
           {t.resetAnswers}
@@ -153,7 +172,7 @@ const Step2Execution: React.FC = () => {
                     placeholder={t.placeholders.answer}
                     value={answer?.text || ''}
                     onChange={(e) => updateAnswer(q.id, e.target.value)}
-                    disabled={isAssessing} // Removed hasResult check to allow re-writing
+                    disabled={isAssessing} 
                   />
                   {isAssessing && (
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur border border-slate-100 p-1.5 rounded-full shadow-sm animate-pulse" title="AI is thinking...">
