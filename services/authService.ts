@@ -1,6 +1,6 @@
 
 import { supabase } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export const authService = {
   // Sign Up with Email
@@ -32,7 +32,7 @@ export const authService = {
 
   // Listen for Auth Changes
   onAuthStateChange: (callback: (user: User | null) => void) => {
-    return supabase.auth.onAuthStateChange((_event, session) => {
+    return supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       callback(session?.user || null);
     });
   }
