@@ -1,6 +1,8 @@
 
+import { User } from '@supabase/supabase-js';
+
 export type Language = 'en' | 'ru' | 'uz-lat' | 'uz-cyr';
-export type View = 'dashboard' | 'assessor' | 'about';
+export type View = 'dashboard' | 'assessor' | 'about' | 'plans' | 'login' | 'profile';
 
 export interface RubricItem {
   id: string;
@@ -44,6 +46,17 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export interface Plan {
+  id: 'free' | 'daily' | 'monthly' | 'yearly';
+  price: number; // in UZS
+  currency: string;
+  duration: string;
+  features: string[];
+  isPopular?: boolean;
+}
+
+export type SubscriptionTier = 'free' | 'daily' | 'monthly' | 'yearly';
+
 export interface ExamContextState {
   view: View;
   step: 1 | 2 | 3;
@@ -54,6 +67,12 @@ export interface ExamContextState {
   answers: Record<string, StudentAnswer>; // Keyed by Question ID
   overallFeedback: string | null;
   chatHistory: ChatMessage[];
+  subscriptionTier: SubscriptionTier;
+  user: User | null; // Supabase User
+  
+  // Theme
+  isDarkMode: boolean;
+  toggleTheme: () => void;
   
   setView: (view: View) => void;
   setStep: (step: 1 | 2 | 3) => void;
@@ -67,6 +86,10 @@ export interface ExamContextState {
   setOverallFeedback: (feedback: string | null) => void;
   addChatMessage: (role: 'user' | 'model', text: string) => void;
   resetAnswers: () => void;
+  upgradeSubscription: (tier: SubscriptionTier) => void;
+  logout: () => void;
+  checkUsage: () => boolean;
+  incrementUsage: () => void;
 }
 
 export const SUPPORTED_LANGUAGES: { code: Language; label: string }[] = [

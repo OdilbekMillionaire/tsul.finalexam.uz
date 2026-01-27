@@ -1,12 +1,41 @@
 
-import { Language, Rubric } from './types';
+import { Language, Rubric, Plan } from './types';
 
 export const TRANSLATIONS = {
   en: {
     nav: {
       dashboard: "Dashboard",
       assessor: "AI Assessor",
-      about: "About Us"
+      about: "About Us",
+      plans: "Pricing",
+      login: "Login",
+      profile: "Profile"
+    },
+    auth: {
+      title: "Welcome Back",
+      subtitle: "Sign in to access your assessment history and pro features.",
+      email: "Email Address",
+      password: "Password",
+      signIn: "Sign In",
+      signUp: "Create Account",
+      noAccount: "Don't have an account?",
+      hasAccount: "Already have an account?",
+      error: "Authentication failed. Please check your credentials.",
+      registerTitle: "Join TSUL Finalizer",
+      registerSubtitle: "Create an account to save your progress."
+    },
+    profile: {
+      title: "My Profile",
+      accountDetails: "Account Details",
+      email: "Email",
+      id: "User ID",
+      subscription: "Current Subscription",
+      status: "Status",
+      expires: "Expires",
+      logout: "Log Out",
+      active: "Active",
+      upgrade: "Upgrade Plan",
+      history: "Assessment History (Coming Soon)"
     },
     dashboard: {
       heroTitle: "TSUL Finalizer",
@@ -116,13 +145,80 @@ export const TRANSLATIONS = {
       strengths: "Overall Strengths",
       weaknesses: "Key Weaknesses in Legal Reasoning",
       tips: "General Growth Tips for the Future"
+    },
+    plans: {
+      title: "Choose Your Plan",
+      subtitle: "Invest in your legal career with the best AI tools.",
+      subscribe: "Subscribe",
+      current: "Current Plan",
+      mostPopular: "Best Value",
+      free: "Free",
+      daily: "24-Hour Pass",
+      monthly: "Monthly Pro",
+      yearly: "Yearly Elite",
+      features: {
+        basic_limit: "3 AI Assessments per day",
+        unlimited: "Unlimited Assessments",
+        export: "PDF Export & Printing",
+        support: "Priority 24/7 Support",
+        chat: "Unlimited AI Tutor Chat",
+        history: "Unlimited Assessment History",
+        rubric: "Custom 'Mezon' Rubrics",
+        lex: "Deep lex.uz Integration",
+        ocr: "Smart Photo Recognition",
+        speed: "Fastest Processing Speed",
+        updates: "Early Access to New Features"
+      }
+    },
+    payment: {
+      title: "Secure Payment",
+      instruction: "Please transfer the exact amount to one of the cards below via your banking app (Click, Payme, Apelsin).",
+      amount: "Amount to Pay",
+      copy: "Copy",
+      uploadTitle: "Upload Receipt",
+      uploadDesc: "Upload a screenshot of the successful payment.",
+      verifyBtn: "Verify Payment",
+      verifying: "Verifying...",
+      success: "Payment Verified! Plan Activated.",
+      error: "Could not verify payment. Please try again or contact support.",
+      invalidReceipt: "The receipt appears invalid or the amount is incorrect.",
+      selectFile: "Select Screenshot"
     }
   },
   ru: {
     nav: {
       dashboard: "Дашборд",
       assessor: "AI Асессор",
-      about: "О нас"
+      about: "О нас",
+      plans: "Тарифы",
+      login: "Войти",
+      profile: "Профиль"
+    },
+    auth: {
+      title: "С возвращением",
+      subtitle: "Войдите, чтобы получить доступ к истории оценок и PRO функциям.",
+      email: "Email адрес",
+      password: "Пароль",
+      signIn: "Войти",
+      signUp: "Создать аккаунт",
+      noAccount: "Нет аккаунта?",
+      hasAccount: "Уже есть аккаунт?",
+      error: "Ошибка авторизации. Проверьте данные.",
+      registerTitle: "Присоединяйтесь к TSUL Finalizer",
+      registerSubtitle: "Создайте аккаунт для сохранения прогресса."
+    },
+    profile: {
+      title: "Мой Профиль",
+      accountDetails: "Детали аккаунта",
+      email: "Email",
+      id: "ID пользователя",
+      subscription: "Текущая подписка",
+      status: "Статус",
+      expires: "Истекает",
+      logout: "Выйти",
+      active: "Активен",
+      upgrade: "Улучшить план",
+      history: "История оценок (Скоро)"
     },
     dashboard: {
       heroTitle: "TSUL Finalizer",
@@ -232,13 +328,80 @@ export const TRANSLATIONS = {
       strengths: "Общие сильные стороны",
       weaknesses: "Ключевые недостатки в юридической аргументации",
       tips: "Общие советы по развитию на будущее"
+    },
+    plans: {
+      title: "Выберите тариф",
+      subtitle: "Инвестируйте в свою юридическую карьеру с лучшими AI-инструментами.",
+      subscribe: "Подписаться",
+      current: "Текущий план",
+      mostPopular: "Выгодный выбор",
+      free: "Бесплатный",
+      daily: "Доступ на 24 часа",
+      monthly: "Месячный PRO",
+      yearly: "Годовой Elite",
+      features: {
+        basic_limit: "3 AI оценки в день",
+        unlimited: "Безлимитные оценки",
+        export: "Экспорт в PDF и печать",
+        support: "Приоритетная поддержка 24/7",
+        chat: "Безлимитный AI репетитор",
+        history: "Неограниченная история",
+        rubric: "Свои 'Мезон' рубрики",
+        lex: "Глубокая интеграция lex.uz",
+        ocr: "Умное распознавание фото",
+        speed: "Максимальная скорость обработки",
+        updates: "Ранний доступ к функциям"
+      }
+    },
+    payment: {
+      title: "Безопасная оплата",
+      instruction: "Пожалуйста, переведите точную сумму на одну из карт ниже через ваше банковское приложение (Click, Payme, Apelsin).",
+      amount: "К оплате",
+      copy: "Скопировать",
+      uploadTitle: "Загрузить чек",
+      uploadDesc: "Загрузите скриншот успешной оплаты.",
+      verifyBtn: "Проверить оплату",
+      verifying: "Проверка...",
+      success: "Оплата подтверждена! План активирован.",
+      error: "Не удалось проверить оплату. Попробуйте еще раз.",
+      invalidReceipt: "Чек недействителен или сумма неверна.",
+      selectFile: "Выбрать скриншот"
     }
   },
   'uz-lat': {
     nav: {
       dashboard: "Boshqaruv paneli",
       assessor: "AI baholovchi",
-      about: "Biz haqimizda"
+      about: "Biz haqimizda",
+      plans: "Tariflar",
+      login: "Kirish",
+      profile: "Profil"
+    },
+    auth: {
+      title: "Xush kelibsiz",
+      subtitle: "Baholash tarixi va PRO imkoniyatlardan foydalanish uchun tizimga kiring.",
+      email: "Email manzili",
+      password: "Parol",
+      signIn: "Kirish",
+      signUp: "Ro'yxatdan o'tish",
+      noAccount: "Akkauntingiz yo'qmi?",
+      hasAccount: "Akkauntingiz bormi?",
+      error: "Avtorizatsiyada xatolik. Ma'lumotlarni tekshiring.",
+      registerTitle: "TSUL Finalizer ga qo'shiling",
+      registerSubtitle: "Jarayonni saqlab borish uchun akkaunt yarating."
+    },
+    profile: {
+      title: "Mening Profilim",
+      accountDetails: "Akkaunt ma'lumotlari",
+      email: "Email",
+      id: "Foydalanuvchi ID",
+      subscription: "Joriy obuna",
+      status: "Holati",
+      expires: "Tugash muddati",
+      logout: "Chiqish",
+      active: "Faol",
+      upgrade: "Tarifni oshirish",
+      history: "Baholash tarixi (Tez orada)"
     },
     dashboard: {
       heroTitle: "TSUL Finalizer",
@@ -348,13 +511,80 @@ export const TRANSLATIONS = {
       strengths: "Umumiy kuchli tomonlar",
       weaknesses: "Huquqiy asoslashdagi yoki qonunni qo'llashdagi asosiy kamchiliklar",
       tips: "Kelajak uchun umumiy rivojlanish tavsiyalari"
+    },
+    plans: {
+      title: "Tarifni tanlang",
+      subtitle: "Yuridik karyerangizga eng yaxshi AI vositalari bilan sarmoya kiriting.",
+      subscribe: "Obuna bo'lish",
+      current: "Joriy tarif",
+      mostPopular: "Eng foydali",
+      free: "Bepul",
+      daily: "24 Soatlik",
+      monthly: "Oylik PRO",
+      yearly: "Yillik Elite",
+      features: {
+        basic_limit: "Kuniga 3 ta AI baholash",
+        unlimited: "Cheksiz baholash",
+        export: "PDF eksport va chop etish",
+        support: "24/7 Tezkor qo'llab-quvvatlash",
+        chat: "Cheksiz AI repetitor",
+        history: "Cheksiz tarix",
+        rubric: "Maxsus 'Mezon' rubrikalar",
+        lex: "Chuqur lex.uz integratsiyasi",
+        ocr: "Rasmlarni aqlli taniy olish",
+        speed: "Maksimal ishlash tezligi",
+        updates: "Yangi imkoniyatlardan erta foydalanish"
+      }
+    },
+    payment: {
+      title: "Xavfsiz to'lov",
+      instruction: "Iltimos, ko'rsatilgan summani bank ilovangiz (Click, Payme, Apelsin) orqali quyidagi kartalardan biriga o'tkazing.",
+      amount: "To'lov summasi",
+      copy: "Nusxalash",
+      uploadTitle: "Chekni yuklash",
+      uploadDesc: "Muvaffaqiyatli to'lov skrinshotini yuklang.",
+      verifyBtn: "To'lovni tekshirish",
+      verifying: "Tekshirilmoqda...",
+      success: "To'lov tasdiqlandi! Tarif faollashtirildi.",
+      error: "To'lovni tasdiqlab bo'lmadi. Qayta urinib ko'ring.",
+      invalidReceipt: "Chek yaroqsiz yoki summa noto'g'ri.",
+      selectFile: "Skrinshotni tanlash"
     }
   },
   'uz-cyr': {
     nav: {
       dashboard: "Бошқарув панели",
       assessor: "AI баҳоловчи",
-      about: "Биз ҳақимизда"
+      about: "Биз ҳақимизда",
+      plans: "Тарифлар",
+      login: "Кириш",
+      profile: "Профиль"
+    },
+    auth: {
+      title: "Хуш келибсиз",
+      subtitle: "Баҳолаш тарихи ва PRO имкониятлардан фойдаланиш учун тизимга киринг.",
+      email: "Email манзили",
+      password: "Парол",
+      signIn: "Кириш",
+      signUp: "Рўйхатдан ўтиш",
+      noAccount: "Аккаунтингиз йўқми?",
+      hasAccount: "Аккаунтингиз борми?",
+      error: "Авторизацияда хатолик. Маълумотларни текширинг.",
+      registerTitle: "TSUL Finalizer га қўшилинг",
+      registerSubtitle: "Жараённи сақлаб бориш учун аккаунт яратинг."
+    },
+    profile: {
+      title: "Менинг Профилим",
+      accountDetails: "Аккаунт маълумотлари",
+      email: "Email",
+      id: "Фойдаланувчи ID",
+      subscription: "Жорий обуна",
+      status: "Ҳолати",
+      expires: "Тугаш муддати",
+      logout: "Чиқиш",
+      active: "Фаол",
+      upgrade: "Тарифни ошириш",
+      history: "Баҳолаш тарихи (Тез орада)"
     },
     dashboard: {
       heroTitle: "TSUL Finalizer",
@@ -413,22 +643,22 @@ export const TRANSLATIONS = {
     totalScore: "Жами балл",
     downloadPdf: "PDF юклаб олиш",
     assessing: "Baholanmoqda...",
-    resetAnswers: "Янги талаба (Жавобларни тозалаш)",
+    resetAnswers: "Янги талаба (Javoblarni tozalash)",
     resetSession: "Сессияни тиклаш (Барчасини ўчириш)",
-    confirmReset: "Ишончингиз комилми? Бу барча маълумотларни бутунлай ўчириб ташлайди.",
-    examConfig: "Имтиҳон конфигурацияси",
+    confirmReset: "Ишончингиз комилми? Bu barcha ma'lumotlarni butunlay o'chirib tashlaydi.",
+    examConfig: "Imtihon konfiguratsiyasi",
     saveProgress: "Сақлаш",
     saved: "Сақланди!",
-    noQuestions: "Саволлар ҳали қўшилмади.",
-    questionAnalysis: "{n}-савол таҳлили",
-    overallAssessment: "Имтиҳон бўйича умумий хулоса",
-    generateFeedback: "Умумий хулосани шакллантириш",
-    generating: "Шакллантирилмоқда...",
-    growthTips: "Ўсиш бўйича маслаҳатлар",
+    noQuestions: "Savollar hali qo'shilmadi.",
+    questionAnalysis: "{n}-savol tahlili",
+    overallAssessment: "Imtihon bo'yicha umumiy xulosa",
+    generateFeedback: "Umumiy xulosani shakllantirish",
+    generating: "Shakllantirilmoqda...",
+    growthTips: "O'sish bo'yicha maslahatlar",
     chatTitle: "Exam AI",
-    chatGreeting: "Салом! Мен Exam AI ман. Натижаларни таҳлил қилдим. Баҳолаш, хатолар ёки яхшиланиш йўллари ҳақида сўранг.",
-    typeMessage: "Натижалар ҳақида сўранг...",
-    send: "Юбориш",
+    chatGreeting: "Salom! Men Exam AI man. Natijalarni tahlil qildim. Baholash, xatolar yoki yaxshilanish yo'llari haqida so'rang.",
+    typeMessage: "Natijalar haqida so'rang...",
+    send: "Yuborish",
     smartImport: {
       title: "Ақлли Импорт",
       description: "Бутун имтиҳон матнини (Фабула + Саволлар) шу ерга ташланг. AI уларни автоматик ажратиб беради.",
@@ -464,13 +694,51 @@ export const TRANSLATIONS = {
       strengths: "Умумий кучли томонлар",
       weaknesses: "Ҳуқуқий асослашдаги ёки қонунни қўллашдаги асосий камчиликлар",
       tips: "Келажак учун умумий ривожланиш тавсиялари"
+    },
+    plans: {
+      title: "Тарифни танланг",
+      subtitle: "Юридик карьерангизга энг яхши AI воситалари билан сармоя киритинг.",
+      subscribe: "Обуна бўлиш",
+      current: "Жорий тариф",
+      mostPopular: "Энг фойдали",
+      free: "Бепул",
+      daily: "24 Соатлик",
+      monthly: "Ойлик PRO",
+      yearly: "Йиллик Elite",
+      features: {
+        basic_limit: "Кунига 3 та AI баҳолаш",
+        unlimited: "Чексиз баҳолаш",
+        export: "PDF экспорт ва чоп этиш",
+        support: "24/7 Тезкор қўллаб-қувватлаш",
+        chat: "Чексиз AI репетитор",
+        history: "Чексиз тарих",
+        rubric: "Махсус 'Мезон' рубрикалар",
+        lex: "Чуқур lex.uz интеграцияси",
+        ocr: "Расмларни ақлли таний олиш",
+        speed: "Максимал ишлаш тезлиги",
+        updates: "Янги имкониятлардан эрта фойдаланиш"
+      }
+    },
+    payment: {
+      title: "Хавфсиз тўлов",
+      instruction: "Илтимос, кўрсатилган суммани банк иловангиз (Click, Payme, Apelsin) орқали қуйидаги карталардан бирига ўтказинг.",
+      amount: "Тўлов суммаси",
+      copy: "Нусхалаш",
+      uploadTitle: "Чекни юклаш",
+      uploadDesc: "Муваффақиятли тўлов скриншотини юкланг.",
+      verifyBtn: "Тўловни текшириш",
+      verifying: "Текширилмоқда...",
+      success: "Тўлов тасдиқланди! Тариф фаоллаштирилди.",
+      error: "Тўловни тасдиқлаб бўлмади. Қайта уриниб кўринг.",
+      invalidReceipt: "Чек яроқсиз ёки сумма нотўғри.",
+      selectFile: "Скриншотни танлаш"
     }
   }
 };
 
 export const RUBRIC_TEMPLATES: Record<Language, Rubric> = {
   en: {
-    type: 'quick',
+    type: 'custom',
     customInstructions: '',
     items: [
       { id: '1', label: 'Legal Issue Identification', description: 'Identification of accurate legal norms and issues', weight: 8, maxWeight: 10, enabled: true },
@@ -479,7 +747,7 @@ export const RUBRIC_TEMPLATES: Record<Language, Rubric> = {
     ]
   },
   ru: {
-    type: 'quick',
+    type: 'custom',
     customInstructions: '',
     items: [
       { id: '1', label: 'Определение правовых норм', description: 'Определение точных правовых норм и вопросов', weight: 8, maxWeight: 10, enabled: true },
@@ -488,7 +756,7 @@ export const RUBRIC_TEMPLATES: Record<Language, Rubric> = {
     ]
   },
   'uz-lat': {
-    type: 'quick',
+    type: 'custom',
     customInstructions: '',
     items: [
       { id: '1', label: 'Huquqiy normalarni aniqlash', description: 'Aniq huquqiy normalar va masalalarni aniqlash', weight: 8, maxWeight: 10, enabled: true },
@@ -497,7 +765,7 @@ export const RUBRIC_TEMPLATES: Record<Language, Rubric> = {
     ]
   },
   'uz-cyr': {
-    type: 'quick',
+    type: 'custom',
     customInstructions: '',
     items: [
       { id: '1', label: 'Ҳуқуқий нормаларни аниқлаш', description: 'Аниқ ҳуқуқий нормалар ва масалаларни аниқлаш', weight: 8, maxWeight: 10, enabled: true },
@@ -506,3 +774,38 @@ export const RUBRIC_TEMPLATES: Record<Language, Rubric> = {
     ]
   }
 };
+
+export const PLANS: Plan[] = [
+  {
+    id: 'free',
+    price: 0,
+    currency: "UZS",
+    duration: "Forever",
+    features: ['basic_limit', 'rubric', 'lex'],
+    isPopular: false
+  },
+  {
+    id: 'daily',
+    price: 89000,
+    currency: "UZS",
+    duration: "24 Hours",
+    features: ['unlimited', 'export', 'lex', 'support'],
+    isPopular: false
+  },
+  {
+    id: 'monthly',
+    price: 229000,
+    currency: "UZS",
+    duration: "1 Month",
+    features: ['unlimited', 'export', 'lex', 'support', 'chat', 'rubric', 'history'],
+    isPopular: true
+  },
+  {
+    id: 'yearly',
+    price: 589000,
+    currency: "UZS",
+    duration: "1 Year",
+    features: ['unlimited', 'export', 'lex', 'support', 'chat', 'rubric', 'history', 'ocr', 'speed', 'updates'],
+    isPopular: false
+  }
+];

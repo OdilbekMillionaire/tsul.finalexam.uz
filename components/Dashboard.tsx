@@ -14,7 +14,7 @@ const IMAGES = [
 ];
 
 const Dashboard: React.FC = () => {
-  const { language, setView } = useExamContext();
+  const { language, setView, subscriptionTier } = useExamContext();
   const t = TRANSLATIONS[language];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -51,15 +51,26 @@ const Dashboard: React.FC = () => {
           <p className="text-xl md:text-2xl text-slate-200 mb-10 font-light max-w-2xl leading-relaxed">
             {t.dashboard.heroSubtitle}
           </p>
-          <button 
-            onClick={() => setView('assessor')}
-            className="w-fit px-8 py-4 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B1120] font-bold text-lg rounded-lg shadow-lg transition-transform transform hover:-translate-y-1 hover:scale-105 flex items-center gap-2"
-          >
-            {t.dashboard.cta}
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-            </svg>
-          </button>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setView('assessor')}
+              className="px-8 py-4 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B1120] font-bold text-lg rounded-lg shadow-lg transition-transform transform hover:-translate-y-1 hover:scale-105 flex items-center gap-2"
+            >
+              {t.dashboard.cta}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+            
+            {subscriptionTier === 'free' && (
+               <button 
+                 onClick={() => setView('plans')}
+                 className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg rounded-lg shadow-lg transition-transform transform hover:-translate-y-1"
+               >
+                 Upgrade to Pro
+               </button>
+            )}
+          </div>
         </div>
 
         {/* Carousel Indicators */}
@@ -77,47 +88,47 @@ const Dashboard: React.FC = () => {
       {/* Info Cards Grid */}
       <div className="grid md:grid-cols-3 gap-8 mb-16">
         {/* Feature 1 */}
-        <div className="bg-white p-8 rounded-xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all group">
-          <div className="w-14 h-14 bg-blue-50 rounded-lg flex items-center justify-center mb-6 text-[#0B1120] group-hover:bg-[#0B1120] group-hover:text-white transition-colors">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-xl border border-slate-100 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all group">
+          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-6 text-[#0B1120] dark:text-blue-300 group-hover:bg-[#0B1120] group-hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-[#0B1120] mb-3 font-serif">{t.dashboard.feature1Title}</h3>
-          <p className="text-slate-600 leading-relaxed">
+          <h3 className="text-xl font-bold text-[#0B1120] dark:text-white mb-3 font-serif">{t.dashboard.feature1Title}</h3>
+          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
             {t.dashboard.feature1Text}
           </p>
         </div>
 
         {/* Feature 2 */}
-        <div className="bg-white p-8 rounded-xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all group">
-          <div className="w-14 h-14 bg-orange-50 rounded-lg flex items-center justify-center mb-6 text-[#F59E0B] group-hover:bg-[#F59E0B] group-hover:text-white transition-colors">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-xl border border-slate-100 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all group">
+          <div className="w-14 h-14 bg-orange-50 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mb-6 text-[#F59E0B] group-hover:bg-[#F59E0B] group-hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.905 59.905 0 0 1 12 3.493a59.902 59.902 0 0 1 10.499 5.258 50.55 50.55 0 0 0-2.658.813m-15.482 0A50.697 50.697 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-[#0B1120] mb-3 font-serif">{t.dashboard.feature2Title}</h3>
-          <p className="text-slate-600 leading-relaxed">
+          <h3 className="text-xl font-bold text-[#0B1120] dark:text-white mb-3 font-serif">{t.dashboard.feature2Title}</h3>
+          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
             {t.dashboard.feature2Text}
           </p>
         </div>
 
         {/* Feature 3 */}
-        <div className="bg-white p-8 rounded-xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all group">
-          <div className="w-14 h-14 bg-purple-50 rounded-lg flex items-center justify-center mb-6 text-[#6366f1] group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-xl border border-slate-100 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all group">
+          <div className="w-14 h-14 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-6 text-[#6366f1] dark:text-purple-300 group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
               <path strokeLinecap="round" strokeLinejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-[#0B1120] mb-3 font-serif">{t.dashboard.feature3Title}</h3>
-          <p className="text-slate-600 leading-relaxed">
+          <h3 className="text-xl font-bold text-[#0B1120] dark:text-white mb-3 font-serif">{t.dashboard.feature3Title}</h3>
+          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
             {t.dashboard.feature3Text}
           </p>
         </div>
       </div>
 
       {/* Stats/Details Section */}
-      <div className="bg-[#0B1120] text-white rounded-2xl p-10 md:p-16 relative overflow-hidden">
+      <div className="bg-[#0B1120] dark:bg-slate-900 text-white rounded-2xl p-10 md:p-16 relative overflow-hidden">
         {/* Decorative Circles */}
         <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-[#F59E0B]/10 rounded-full blur-3xl"></div>

@@ -1,12 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 import Step1Config from './components/Step1Config';
 import Step2Execution from './components/Step2Execution';
 import Step3Results from './components/Step3Results';
 import AboutUs from './components/AboutUs';
 import Dashboard from './components/Dashboard';
-import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES, ChatMessage } from './types';
+import Plans from './components/Plans';
+import Login from './components/Login';
+import Profile from './components/Profile';
+import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES, ChatMessage, SubscriptionTier } from './types';
 import { TRANSLATIONS, RUBRIC_TEMPLATES } from './constants';
+import { getActiveSubscription } from './services/subscriptionService';
+import { authService } from './services/authService';
 
 // --- Context Setup ---
 const ExamContext = createContext<ExamContextState | undefined>(undefined);
@@ -32,8 +38,69 @@ const App: React.FC = () => {
   // New State for Step 3 features
   const [overallFeedback, setOverallFeedback] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
+  
+  // Usage Limiting State
+  const [dailyUsage, setDailyUsage] = useState<number>(0);
+  const [usageDate, setUsageDate] = useState<string>(new Date().toDateString());
 
-  // Hydration Effect
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
+  // Auth State
+  const [user, setUser] = useState<User | null>(null);
+
+  // Theme Persistence & Effect
+  useEffect(() => {
+    // 1. Check local storage or system preference on mount
+    const savedTheme = localStorage.getItem('oxforder_theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    } else {
+        // System preference
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setIsDarkMode(true);
+            document.documentElement.classList.add('dark');
+        }
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('oxforder_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('oxforder_theme', 'light');
+    }
+  };
+
+  // Auth Listener
+  useEffect(() => {
+    // Check current session
+    authService.getCurrentUser().then(u => {
+      setUser(u);
+    });
+
+    // Listen for changes
+    const { data: { subscription } } = authService.onAuthStateChange((u) => {
+      setUser(u);
+      if (u) {
+         // If we are on the login screen and user logs in, go to dashboard
+         setView((prev) => prev === 'login' ? 'dashboard' : prev);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Hydration Effect - Local Storage
   useEffect(() => {
     const saved = localStorage.getItem('oxforder_state');
     if (saved) {
@@ -54,17 +121,56 @@ const App: React.FC = () => {
         }
         if (parsed.overallFeedback) setOverallFeedback(parsed.overallFeedback);
         if (parsed.chatHistory) setChatHistory(parsed.chatHistory);
+        
+        // Optimistically set tier from local storage, then verify with DB below
+        if (parsed.subscriptionTier) {
+            setSubscriptionTier(parsed.subscriptionTier);
+        }
+
+        // Hydrate Usage Logic
+        if (parsed.usageDate) {
+          const today = new Date().toDateString();
+          if (parsed.usageDate !== today) {
+             // New day, reset count
+             setDailyUsage(0);
+             setUsageDate(today);
+          } else {
+             // Same day, keep count
+             setDailyUsage(parsed.dailyUsage || 0);
+             setUsageDate(parsed.usageDate);
+          }
+        }
       } catch (e) {
         console.error("Failed to parse local storage", e);
       }
     }
   }, []);
 
+  // Hydration Effect - Database (Supabase Subscription)
+  // Re-run this whenever the USER changes (logs in/out)
+  useEffect(() => {
+    const fetchSubscription = async () => {
+       const activeTier = await getActiveSubscription();
+       setSubscriptionTier(activeTier);
+    };
+    fetchSubscription();
+  }, [user]);
+
   // Persistence Effect
   useEffect(() => {
-    const stateToSave = { masterCase, questions, rubric, answers, overallFeedback, chatHistory };
+    const stateToSave = { 
+      masterCase, 
+      questions, 
+      rubric, 
+      answers, 
+      overallFeedback, 
+      chatHistory, 
+      subscriptionTier,
+      dailyUsage,
+      usageDate
+    };
     localStorage.setItem('oxforder_state', JSON.stringify(stateToSave));
-  }, [masterCase, questions, rubric, answers, overallFeedback, chatHistory]);
+  }, [masterCase, questions, rubric, answers, overallFeedback, chatHistory, subscriptionTier, dailyUsage, usageDate]);
 
   const t = TRANSLATIONS[language];
 
@@ -99,6 +205,15 @@ const App: React.FC = () => {
     setChatHistory(prev => [...prev, { role, text, timestamp: Date.now() }]);
   };
 
+  const upgradeSubscription = (tier: SubscriptionTier) => {
+    setSubscriptionTier(tier);
+  };
+
+  const logout = async () => {
+    await authService.signOut();
+    setView('dashboard');
+  };
+
   const handleNewLesson = () => {
     if (window.confirm(t.confirmReset)) {
       setMasterCase('');
@@ -110,6 +225,7 @@ const App: React.FC = () => {
       setView('assessor');
       // Reset rubric to the template of the current language
       setRubric(RUBRIC_TEMPLATES[language]);
+      // We do NOT reset daily usage here, that is tied to the user/date, not the lesson session.
       localStorage.removeItem('oxforder_state');
       window.scrollTo(0, 0);
     }
@@ -130,6 +246,17 @@ const App: React.FC = () => {
     setRubric(RUBRIC_TEMPLATES[newLang]);
   };
 
+  // Usage Limit Logic
+  const checkUsage = (): boolean => {
+    if (subscriptionTier !== 'free') return true;
+    return dailyUsage < 3;
+  };
+
+  const incrementUsage = () => {
+    setDailyUsage(prev => prev + 1);
+    setUsageDate(new Date().toDateString());
+  };
+
   const contextValue: ExamContextState = {
     view,
     step,
@@ -140,6 +267,10 @@ const App: React.FC = () => {
     answers,
     overallFeedback,
     chatHistory,
+    subscriptionTier,
+    user,
+    isDarkMode,
+    toggleTheme,
     setView,
     setStep,
     setLanguage,
@@ -151,12 +282,16 @@ const App: React.FC = () => {
     setAssessingStatus,
     setOverallFeedback,
     addChatMessage,
-    resetAnswers
+    resetAnswers,
+    upgradeSubscription,
+    logout,
+    checkUsage,
+    incrementUsage
   };
 
   // New Logo SVG Component
   const Logo = () => (
-    <div className="w-10 h-10 bg-[#0B1120] rounded-lg flex items-center justify-center text-white relative overflow-hidden shadow-lg border border-slate-700">
+    <div className="w-10 h-10 bg-[#0B1120] dark:bg-slate-900 rounded-lg flex items-center justify-center text-white relative overflow-hidden shadow-lg border border-slate-700">
        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
          <path d="M2 17L12 22L22 17" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -172,10 +307,10 @@ const App: React.FC = () => {
 
   return (
     <ExamContext.Provider value={contextValue}>
-      <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-[#FAFAFA]">
+      <div className={`min-h-screen flex flex-col font-sans text-slate-800 dark:text-slate-100 bg-[#FAFAFA] dark:bg-slate-950 transition-colors duration-300`}>
         
         {/* Header */}
-        <header className="bg-white border-b border-slate-100 sticky top-0 z-50">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
             
             {/* Brand */}
@@ -185,46 +320,92 @@ const App: React.FC = () => {
             >
               <Logo />
               <div className="flex flex-col">
-                <h1 className="text-xl font-serif font-bold text-[#0B1120] tracking-tight leading-none uppercase">
+                <h1 className="text-xl font-serif font-bold text-[#0B1120] dark:text-white tracking-tight leading-none uppercase">
                   TSUL Finalizer
                 </h1>
-                <span className="text-[10px] font-bold text-[#F59E0B] tracking-[0.2em] uppercase">Law AI Assessor</span>
+                <div className="flex gap-2 items-center">
+                    <span className="text-[10px] font-bold text-[#F59E0B] tracking-[0.2em] uppercase">Law AI Assessor</span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 tracking-wider border ${
+                        subscriptionTier === 'free' 
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700' 
+                            : 'bg-[#0B1120] dark:bg-slate-800 text-[#F59E0B] border-[#F59E0B]'
+                    }`}>
+                        {subscriptionTier === 'daily' && '24H PASS'}
+                        {subscriptionTier === 'monthly' && 'PRO'}
+                        {subscriptionTier === 'yearly' && 'ELITE'}
+                        {subscriptionTier === 'free' && 'FREE'}
+                    </span>
+                </div>
               </div>
             </div>
 
             {/* Nav & Tools */}
-            <div className="flex items-center gap-8">
-              <nav className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600">
+            <div className="flex items-center gap-6 md:gap-8">
+              <nav className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
                 <button 
                   onClick={() => setView('dashboard')}
-                  className={`px-3 py-2 rounded-md transition-colors ${view === 'dashboard' ? 'text-[#0B1120] font-bold bg-slate-50' : 'hover:text-[#0B1120]'}`}
+                  className={`px-3 py-2 rounded-md transition-colors ${view === 'dashboard' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                 >
                   {t.nav.dashboard}
                 </button>
                 <button 
                   onClick={() => setView('assessor')}
-                  className={`px-3 py-2 rounded-md transition-colors ${view === 'assessor' ? 'text-[#0B1120] font-bold bg-slate-50' : 'hover:text-[#0B1120]'}`}
+                  className={`px-3 py-2 rounded-md transition-colors ${view === 'assessor' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                 >
                   {t.nav.assessor}
                 </button>
                 <button 
-                  onClick={() => setView('about')}
-                  className={`px-3 py-2 rounded-md transition-colors ${view === 'about' ? 'text-[#0B1120] font-bold bg-slate-50' : 'hover:text-[#0B1120]'}`}
+                  onClick={() => setView('plans')}
+                  className={`px-3 py-2 rounded-md transition-colors ${view === 'plans' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                 >
-                  {t.nav.about}
+                  {t.nav.plans}
                 </button>
+                {user ? (
+                   <button 
+                     onClick={() => setView('profile')}
+                     className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${view === 'profile' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                   >
+                     {/* Mini Avatar */}
+                     <div className="w-5 h-5 rounded-full bg-oxford-primary text-white text-[10px] flex items-center justify-center">
+                       {user.email?.charAt(0).toUpperCase()}
+                     </div>
+                     {t.nav.profile}
+                   </button>
+                ) : (
+                   <button 
+                     onClick={() => setView('login')}
+                     className={`px-3 py-2 rounded-md transition-colors ${view === 'login' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                   >
+                     {t.nav.login}
+                   </button>
+                )}
               </nav>
 
-              <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+              
+              {/* Theme Toggle */}
+              <button 
+                onClick={toggleTheme}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDarkMode ? (
+                   /* Sun Icon */
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                ) : (
+                   /* Moon Icon */
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                )}
+              </button>
 
               {/* Language */}
               <select 
                 value={language}
                 onChange={handleLanguageChange}
-                className="text-sm font-medium text-slate-600 bg-transparent outline-none cursor-pointer hover:text-[#0B1120]"
+                className="text-sm font-medium text-slate-600 dark:text-slate-400 bg-transparent outline-none cursor-pointer hover:text-[#0B1120] dark:hover:text-white"
               >
                 {SUPPORTED_LANGUAGES.map(l => (
-                  <option key={l.code} value={l.code}>{l.label}</option>
+                  <option key={l.code} value={l.code} className="bg-white dark:bg-slate-800">{l.label}</option>
                 ))}
               </select>
             </div>
@@ -235,24 +416,26 @@ const App: React.FC = () => {
         <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
           
           {view === 'dashboard' && <Dashboard />}
+          {view === 'login' && <Login />}
+          {view === 'profile' && <Profile />}
           
           {view === 'assessor' && (
             <>
               {/* Assessor Stepper */}
               <div className="mb-12 flex items-center justify-center">
                 <div className="flex items-center gap-4 text-sm font-semibold">
-                  <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#0B1120]' : 'text-slate-300'}`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-[#0B1120] text-white border-[#0B1120]' : 'border-slate-200'}`}>1</span>
+                  <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>1</span>
                     <span className="hidden sm:inline">{t.step1}</span>
                   </div>
-                  <div className="w-16 h-px bg-slate-200"></div>
-                  <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#0B1120]' : 'text-slate-300'}`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-[#0B1120] text-white border-[#0B1120]' : 'border-slate-200'}`}>2</span>
+                  <div className="w-16 h-px bg-slate-200 dark:bg-slate-700"></div>
+                  <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>2</span>
                     <span className="hidden sm:inline">{t.step2}</span>
                   </div>
-                  <div className="w-16 h-px bg-slate-200"></div>
-                  <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#0B1120]' : 'text-slate-300'}`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-[#0B1120] text-white border-[#0B1120]' : 'border-slate-200'}`}>3</span>
+                  <div className="w-16 h-px bg-slate-200 dark:bg-slate-700"></div>
+                  <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>3</span>
                     <span className="hidden sm:inline">{t.step3}</span>
                   </div>
                 </div>
@@ -265,10 +448,10 @@ const App: React.FC = () => {
               
               {/* Reset/New Lesson Button for Assessor view */}
               {questions.length > 0 && (
-                <div className="flex justify-center mt-12 border-t border-slate-200 pt-8">
+                <div className="flex justify-center mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
                     <button 
                         onClick={handleNewLesson} 
-                        className="text-xs text-red-500 hover:text-red-700 underline"
+                        className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline"
                     >
                         {t.resetSession}
                     </button>
@@ -277,12 +460,13 @@ const App: React.FC = () => {
             </>
           )}
 
+          {view === 'plans' && <Plans />}
           {view === 'about' && <AboutUs />}
 
         </main>
         
         {/* Footer */}
-        <footer className="bg-[#0B1120] text-slate-400 py-12 md:py-16">
+        <footer className="bg-[#0B1120] dark:bg-black text-slate-400 py-12 md:py-16 border-t border-slate-800 dark:border-slate-900">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-between gap-12">
               
@@ -303,6 +487,7 @@ const App: React.FC = () => {
                 <ul className="space-y-3 text-sm">
                   <li><button onClick={() => setView('dashboard')} className="hover:text-white transition">{t.nav.dashboard}</button></li>
                   <li><button onClick={() => setView('assessor')} className="hover:text-white transition">{t.nav.assessor}</button></li>
+                  <li><button onClick={() => setView('plans')} className="hover:text-white transition">{t.nav.plans}</button></li>
                   <li><button onClick={() => setView('about')} className="hover:text-white transition">{t.nav.about}</button></li>
                 </ul>
               </div>

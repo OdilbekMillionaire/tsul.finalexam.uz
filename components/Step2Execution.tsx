@@ -16,7 +16,10 @@ const Step2Execution: React.FC = () => {
     setAssessment, 
     setAssessingStatus,
     setStep,
-    resetAnswers
+    resetAnswers,
+    checkUsage,
+    incrementUsage,
+    setView
   } = useExamContext();
 
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -42,6 +45,14 @@ const Step2Execution: React.FC = () => {
   };
 
   const handleAssess = async (questionId: string) => {
+    // 1. CHECK USAGE LIMIT
+    if (!checkUsage()) {
+       if (confirm("You have reached your daily limit of 3 free AI assessments. Upgrade to Pro for unlimited grading?")) {
+           setView('plans');
+       }
+       return;
+    }
+
     const question = questions.find(q => q.id === questionId);
     const answer = answers[questionId];
 
@@ -65,6 +76,9 @@ const Step2Execution: React.FC = () => {
 
     setAssessment(questionId, realResult);
     setAssessingStatus(questionId, false);
+    
+    // 2. INCREMENT USAGE
+    incrementUsage();
   };
 
   const handleManualSave = () => {
@@ -79,8 +93,8 @@ const Step2Execution: React.FC = () => {
   return (
     <div className="space-y-12 animate-fade-in relative">
        {/* Case Reference (Collapsible or sticky could be nice, keeping it simple for now) */}
-       <div className="bg-oxford-primary/5 p-4 rounded border border-oxford-primary/10 text-sm text-slate-600 mb-8">
-        <h3 className="font-bold text-oxford-primary mb-2">Reference Case:</h3>
+       <div className="bg-oxford-primary/5 dark:bg-slate-800 p-4 rounded border border-oxford-primary/10 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 mb-8 transition-colors">
+        <h3 className="font-bold text-oxford-primary dark:text-white mb-2">Reference Case:</h3>
         <p className="line-clamp-3">{masterCase}</p>
       </div>
 
@@ -89,8 +103,8 @@ const Step2Execution: React.FC = () => {
           onClick={handleManualSave}
           className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${
             showSaveConfirm 
-              ? 'bg-green-100 text-green-700 border border-green-200' 
-              : 'bg-white text-oxford-primary border border-slate-200 hover:bg-slate-50'
+              ? 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' 
+              : 'bg-white dark:bg-slate-800 text-oxford-primary dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
           }`}
         >
           {showSaveConfirm ? (
@@ -108,7 +122,7 @@ const Step2Execution: React.FC = () => {
 
         <button 
            onClick={resetAnswers}
-           className="text-sm font-bold text-oxford-secondary hover:text-red-700 flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 transition"
+           className="text-sm font-bold text-oxford-secondary hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
           {t.resetAnswers}
@@ -122,20 +136,20 @@ const Step2Execution: React.FC = () => {
           const hasResult = !!answer?.assessment;
 
           return (
-            <div key={q.id} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
-                <span className="font-serif font-bold text-oxford-primary">Question {idx + 1}</span>
-                <span className="text-xs font-semibold bg-slate-200 px-2 py-1 rounded text-slate-600">
+            <div key={q.id} className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+              <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <span className="font-serif font-bold text-oxford-primary dark:text-white">Question {idx + 1}</span>
+                <span className="text-xs font-semibold bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300">
                   Max: {q.maxWeight} pts
                 </span>
               </div>
               
               <div className="p-6">
-                <p className="text-lg mb-4 text-slate-800 font-medium">{q.text}</p>
+                <p className="text-lg mb-4 text-slate-800 dark:text-slate-100 font-medium">{q.text}</p>
                 
                 <div className="relative">
                   <textarea
-                    className="w-full h-40 p-4 border border-slate-300 rounded-md focus:ring-2 focus:ring-oxford-primary focus:border-transparent outline-none transition mb-4 resize-y disabled:bg-slate-50 disabled:text-slate-500"
+                    className="w-full h-40 p-4 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md focus:ring-2 focus:ring-oxford-primary focus:border-transparent outline-none transition mb-4 resize-y disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
                     placeholder={t.placeholders.answer}
                     value={answer?.text || ''}
                     onChange={(e) => updateAnswer(q.id, e.target.value)}
@@ -154,7 +168,7 @@ const Step2Execution: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     {hasResult && (
-                      <span className="text-green-600 font-bold flex items-center gap-1">
+                      <span className="text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                         Graded: {answer.assessment?.score}/{q.maxWeight}
                       </span>
@@ -188,7 +202,7 @@ const Step2Execution: React.FC = () => {
       <div className="flex justify-between pt-8">
         <button
           onClick={() => setStep(1)}
-          className="px-6 py-3 border border-slate-300 text-slate-600 font-bold rounded-lg hover:bg-slate-50 transition"
+          className="px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition"
         >
           &larr; {t.back}
         </button>

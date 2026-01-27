@@ -15,7 +15,8 @@ const Step3Results: React.FC = () => {
     overallFeedback, 
     setOverallFeedback,
     chatHistory,
-    addChatMessage
+    addChatMessage,
+    isDarkMode
   } = useExamContext();
   
   const t = TRANSLATIONS[language];
@@ -65,7 +66,7 @@ const Step3Results: React.FC = () => {
             const cleanLine = line.replace(/^[\-\*•\d\.]+\s/, '');
             return (
                <li key={i} className="flex items-start gap-2">
-                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-400 flex-shrink-0" />
+                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 flex-shrink-0" />
                  <span>{cleanLine}</span>
                </li>
             );
@@ -73,7 +74,7 @@ const Step3Results: React.FC = () => {
         </ul>
       );
     }
-    return <p className="text-slate-700 leading-relaxed text-sm whitespace-pre-line">{cleaned}</p>;
+    return <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm whitespace-pre-line">{cleaned}</p>;
   };
 
   const handleGenerateOverall = async () => {
@@ -134,7 +135,7 @@ const Step3Results: React.FC = () => {
 
       <div className="print-content space-y-12">
         {/* Score Dashboard */}
-        <div className="bg-gradient-to-r from-oxford-primary to-slate-900 text-white rounded-xl shadow-xl p-8 flex flex-col md:flex-row items-center justify-between">
+        <div className="bg-gradient-to-r from-oxford-primary to-slate-900 dark:from-slate-900 dark:to-black text-white rounded-xl shadow-xl p-8 flex flex-col md:flex-row items-center justify-between">
           <div className="mb-6 md:mb-0">
             <h2 className="text-3xl font-serif font-bold mb-2">{t.totalScore}</h2>
             <div className="text-6xl font-bold text-oxford-accent">
@@ -159,7 +160,7 @@ const Step3Results: React.FC = () => {
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={40} tick={{fill: '#fff'}} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#fff', color: '#000' }} 
+                    contentStyle={{ backgroundColor: isDarkMode ? '#1e293b' : '#fff', color: isDarkMode ? '#fff' : '#000', borderRadius: '8px', border: 'none' }} 
                     cursor={{fill: 'rgba(255,255,255,0.1)'}}
                   />
                   <Bar dataKey="score" fill="#E3D39E" radius={[0, 4, 4, 0]} barSize={20}>
@@ -182,11 +183,11 @@ const Step3Results: React.FC = () => {
             const headerText = t.questionAnalysis ? t.questionAnalysis.replace('{n}', (idx + 1).toString()) : `Question ${idx + 1} Analysis`;
 
             return (
-              <div key={q.id} className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden break-inside-avoid">
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                  <h3 className="font-bold text-slate-700">{headerText}</h3>
+              <div key={q.id} className="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden break-inside-avoid transition-colors">
+                <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                  <h3 className="font-bold text-slate-700 dark:text-slate-200">{headerText}</h3>
                   <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                    result.score / q.maxWeight >= 0.5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    result.score / q.maxWeight >= 0.5 ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
                   }`}>
                     {result.score} / {q.maxWeight}
                   </span>
@@ -197,12 +198,12 @@ const Step3Results: React.FC = () => {
                   {/* Rationale */}
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-bold text-oxford-primary mb-2 uppercase text-xs tracking-wider">{t.rationale}</h4>
+                      <h4 className="font-bold text-oxford-primary dark:text-slate-200 mb-2 uppercase text-xs tracking-wider">{t.rationale}</h4>
                       {renderRichText(result.rationale)}
                     </div>
                     <div>
-                      <h4 className="font-bold text-oxford-secondary mb-2 uppercase text-xs tracking-wider">{t.roadmap}</h4>
-                      <div className="text-slate-700 leading-relaxed text-sm bg-red-50 p-3 rounded border-l-4 border-oxford-secondary">
+                      <h4 className="font-bold text-oxford-secondary dark:text-red-400 mb-2 uppercase text-xs tracking-wider">{t.roadmap}</h4>
+                      <div className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded border-l-4 border-oxford-secondary dark:border-red-500">
                         {renderRichText(result.roadmap)}
                       </div>
                     </div>
@@ -210,11 +211,11 @@ const Step3Results: React.FC = () => {
 
                   {/* Citations */}
                   <div className="space-y-4">
-                    <h4 className="font-bold text-slate-500 mb-2 uppercase text-xs tracking-wider">{t.citations}</h4>
+                    <h4 className="font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase text-xs tracking-wider">{t.citations}</h4>
                     {result.citations.length > 0 ? (
                       <ul className="space-y-2">
                         {result.citations.map((cite, cIdx) => (
-                          <li key={cIdx} className="flex items-start gap-2 text-sm text-oxford-primary">
+                          <li key={cIdx} className="flex items-start gap-2 text-sm text-oxford-primary dark:text-blue-300">
                             <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-oxford-accent flex-shrink-0" />
                             <span>{cleanText(cite)}</span>
                           </li>
@@ -226,12 +227,12 @@ const Step3Results: React.FC = () => {
 
                     {/* Grounding Links - Hide in Print */}
                     {result.groundingUrls && result.groundingUrls.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-slate-100 no-print">
+                      <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 no-print">
                           <p className="text-xs font-bold text-slate-400 mb-2">SOURCE LINKS</p>
                           <ul className="space-y-1">
                             {result.groundingUrls.map((url, uIdx) => (
                               <li key={uIdx}>
-                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline truncate block">
+                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline truncate block">
                                   {url}
                                 </a>
                               </li>
@@ -248,8 +249,8 @@ const Step3Results: React.FC = () => {
         </div>
 
         {/* Overall Assessment Section */}
-        <div className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden break-inside-avoid">
-          <div className="bg-slate-900 text-white px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden break-inside-avoid transition-colors">
+          <div className="bg-slate-900 dark:bg-black text-white px-6 py-4 border-b border-slate-800 dark:border-slate-800 flex justify-between items-center">
               <h3 className="font-bold text-lg">{t.overallAssessment}</h3>
               {!overallFeedback && !isGeneratingFeedback && (
                   <button 
@@ -263,14 +264,14 @@ const Step3Results: React.FC = () => {
           <div className="p-8">
               {isGeneratingFeedback ? (
                 <div className="flex flex-col items-center justify-center py-8 text-slate-500 gap-3">
-                    <svg className="animate-spin h-8 w-8 text-oxford-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-8 w-8 text-oxford-primary dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <span>{t.generating}</span>
                 </div>
               ) : overallFeedback ? (
-                <div className="prose max-w-none text-slate-700">
+                <div className="prose max-w-none text-slate-700 dark:text-slate-300">
                   {renderRichText(overallFeedback)}
                 </div>
               ) : (
@@ -285,7 +286,7 @@ const Step3Results: React.FC = () => {
       <div className="flex justify-center pt-8 no-print">
         <button
           onClick={() => setStep(2)}
-           className="text-slate-400 hover:text-slate-700 text-xs font-medium flex items-center gap-1 transition-colors px-4 py-2"
+           className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-xs font-medium flex items-center gap-1 transition-colors px-4 py-2"
         >
           &larr; {t.back}
         </button>
@@ -295,10 +296,10 @@ const Step3Results: React.FC = () => {
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none no-print">
          {/* Chat Window */}
          <div className={`
-             mb-6 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 pointer-events-auto
+             mb-6 w-80 md:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col transition-all duration-300 pointer-events-auto
              ${isChatOpen ? 'opacity-100 translate-y-0 h-[500px]' : 'opacity-0 translate-y-10 h-0'}
          `}>
-             <div className="bg-oxford-primary text-white p-4 font-bold flex justify-between items-center">
+             <div className="bg-oxford-primary dark:bg-slate-900 text-white p-4 font-bold flex justify-between items-center">
                  <div className="flex items-center gap-2">
                     {/* Robotic Icon in Header */}
                     <div className="bg-white/10 p-1.5 rounded-full">
@@ -316,22 +317,22 @@ const Step3Results: React.FC = () => {
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                  </button>
              </div>
-             <div className="flex-1 bg-slate-50 p-4 overflow-y-auto space-y-3">
+             <div className="flex-1 bg-slate-50 dark:bg-slate-900/50 p-4 overflow-y-auto space-y-3">
                 {chatHistory.length === 0 && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-slate-700 mb-2">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-3 text-sm text-slate-700 dark:text-slate-300 mb-2">
                      {t.chatGreeting}
                   </div>
                 )}
                 {chatHistory.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${msg.role === 'user' ? 'bg-oxford-primary text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
+                      <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${msg.role === 'user' ? 'bg-oxford-primary text-white' : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200'}`}>
                          {cleanText(msg.text)}
                       </div>
                   </div>
                 ))}
                 {isSendingChat && (
                    <div className="flex justify-start">
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2">
+                      <div className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2">
                         <div className="flex gap-1">
                           <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
                           <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></span>
@@ -342,13 +343,13 @@ const Step3Results: React.FC = () => {
                 )}
                 <div ref={chatEndRef} />
              </div>
-             <form onSubmit={handleSendChat} className="p-3 bg-white border-t border-slate-200 flex gap-2">
+             <form onSubmit={handleSendChat} className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex gap-2">
                 <input 
                   type="text" 
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
                   placeholder={t.typeMessage}
-                  className="flex-1 text-sm border border-slate-300 rounded-md px-3 py-2 focus:border-oxford-primary outline-none"
+                  className="flex-1 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-md px-3 py-2 focus:border-oxford-primary outline-none"
                 />
                 <button 
                   type="submit" 
@@ -387,10 +388,10 @@ const Step3Results: React.FC = () => {
             )}
             
             {!isChatOpen && (
-              <span className="absolute right-full mr-4 bg-white text-oxford-primary px-4 py-2 rounded-lg shadow-xl text-sm font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-100">
+              <span className="absolute right-full mr-4 bg-white dark:bg-slate-700 text-oxford-primary dark:text-white px-4 py-2 rounded-lg shadow-xl text-sm font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-100 dark:border-slate-600">
                 {t.chatTitle}
                 {/* Arrow */}
-                <div className="absolute top-1/2 -right-1.5 w-3 h-3 bg-white border-t border-r border-slate-100 transform rotate-45 -translate-y-1/2"></div>
+                <div className="absolute top-1/2 -right-1.5 w-3 h-3 bg-white dark:bg-slate-700 border-t border-r border-slate-100 dark:border-slate-600 transform rotate-45 -translate-y-1/2"></div>
               </span>
             )}
          </button>
