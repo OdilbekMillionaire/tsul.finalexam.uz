@@ -48,37 +48,57 @@ const Step3Results: React.FC = () => {
     max: q.maxWeight
   }));
 
-  // Helper to remove markdown asterisks if AI slips up
-  const cleanText = (text: string) => {
-    if (!text) return "";
-    return text.replace(/\*\*/g, '').replace(/\*/g, '');
-  };
-
-  // Helper to format text with bullet points if detected
+  // Helper to format text with Markdown headers and bullet points
   const renderRichText = (text: string) => {
     if (!text) return null;
-    const cleaned = cleanText(text);
     
-    // Check if the text looks like a list (starts with -, *, or 1.)
-    const hasListMarkers = /^[-\*•\d\.]+\s/m.test(cleaned);
-
-    if (hasListMarkers) {
-      const lines = cleaned.split('\n').filter(line => line.trim() !== '');
-      return (
-        <ul className="list-none space-y-2 mt-2">
-          {lines.map((line, i) => {
-            const cleanLine = line.replace(/^[\-\*•\d\.]+\s/, '');
+    // Split by newlines
+    const lines = text.split('\n');
+    
+    return (
+      <div className="space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        {lines.map((line, i) => {
+          const trimmed = line.trim();
+          if (!trimmed) return <br key={i} className="content-[''] block h-2" />;
+          
+          // Header detection: matches #, ##, ### with or without strict space immediately after
+          // We allow lenient matching to catch "###Header" or "### Header"
+          if (/^#{1,6}.+/.test(trimmed)) {
+            // Remove the hashtags and any following whitespace
+            const cleanHeader = trimmed.replace(/^#{1,6}\s*/, '').replace(/\*\*/g, ''); 
             return (
-               <li key={i} className="flex items-start gap-2">
-                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 flex-shrink-0" />
-                 <span>{cleanLine}</span>
-               </li>
+              <h4 key={i} className="text-base font-bold text-oxford-primary dark:text-white mt-4 mb-2 border-b border-slate-100 dark:border-slate-700 pb-1">
+                {cleanHeader}
+              </h4>
             );
-          })}
-        </ul>
-      );
-    }
-    return <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm whitespace-pre-line">{cleaned}</p>;
+          }
+
+          // Parse inline bolding (**text**)
+          const parseBold = (str: string) => {
+             const parts = str.split(/(\*\*.*?\*\*)/);
+             return parts.map((part, idx) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                   return <strong key={idx} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+                }
+                return part;
+             });
+          };
+
+          // Bullet points (-, *, •) or Numbered lists (1.)
+          if (/^[-*•]\s/.test(trimmed) || /^\d+\.\s/.test(trimmed)) {
+             const cleanContent = trimmed.replace(/^[-*•\d\.]+\s/, '');
+             return (
+               <div key={i} className="flex items-start gap-2 ml-1">
+                 <span className="mt-2 w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 flex-shrink-0" />
+                 <span>{parseBold(cleanContent)}</span>
+               </div>
+             );
+          }
+
+          return <p key={i}>{parseBold(trimmed)}</p>;
+        })}
+      </div>
+    );
   };
 
   const handleGenerateOverall = async () => {
@@ -231,7 +251,7 @@ const Step3Results: React.FC = () => {
                         {result.citations.map((cite, cIdx) => (
                           <li key={cIdx} className="flex items-start gap-2 text-sm text-oxford-primary dark:text-blue-300">
                             <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-oxford-accent flex-shrink-0" />
-                            <span>{cleanText(cite)}</span>
+                            <span>{cite.replace(/\*/g, '')}</span>
                           </li>
                         ))}
                       </ul>
@@ -340,7 +360,8 @@ const Step3Results: React.FC = () => {
                 {chatHistory.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${msg.role === 'user' ? 'bg-oxford-primary text-white' : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200'}`}>
-                         {cleanText(msg.text)}
+                         {/* Simple render for chat, basic Markdown can be supported if reused logic */}
+                         {msg.text.replace(/\*\*/g, '')}
                       </div>
                   </div>
                 ))}

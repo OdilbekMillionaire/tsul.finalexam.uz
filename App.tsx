@@ -52,20 +52,16 @@ const App: React.FC = () => {
 
   // Theme Persistence & Effect
   useEffect(() => {
-    // 1. Check local storage or system preference on mount
+    // 1. Check local storage
     const savedTheme = localStorage.getItem('oxforder_theme');
+    
+    // Default to Light mode if no preference is saved, regardless of system preference
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
-    } else if (savedTheme === 'light') {
+    } else {
       setIsDarkMode(false);
       document.documentElement.classList.remove('dark');
-    } else {
-        // System preference
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setIsDarkMode(true);
-            document.documentElement.classList.add('dark');
-        }
     }
   }, []);
 
@@ -165,8 +161,8 @@ const App: React.FC = () => {
       answers, 
       overallFeedback, 
       chatHistory, 
-      subscriptionTier,
-      dailyUsage,
+      subscriptionTier, 
+      dailyUsage, 
       usageDate
     };
     localStorage.setItem('oxforder_state', JSON.stringify(stateToSave));

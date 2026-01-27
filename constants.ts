@@ -54,7 +54,7 @@ export const TRANSLATIONS = {
       stats2: "Precise assessment of legal analysis and logical reasoning.",
       stats3: "Guaranteed academic integrity and data security.",
       accuracy: "Accuracy",
-      model: "Gemini 3 Pro"
+      model: "Gemini 3 Flash"
     },
     about: {
       heroTitle: "TSUL Finalizer - Legal Excellence",
@@ -244,7 +244,7 @@ export const TRANSLATIONS = {
       stats2: "Точная оценка юридического анализа и логического мышления.",
       stats3: "Гарантированная академическая честность и безопасность данных.",
       accuracy: "Точность",
-      model: "Gemini 3 Pro"
+      model: "Gemini 3 Flash"
     },
     about: {
       heroTitle: "TSUL Finalizer - Совершенство права",
@@ -381,7 +381,7 @@ export const TRANSLATIONS = {
       success: "Оплата подтверждена! План активирован.",
       error: "Не удалось проверить оплату. Попробуйте еще раз.",
       invalidReceipt: "Чек недействителен или сумма неверна.",
-      selectFile: "Выбрать скриншот"
+      selectFile: "Скриншотни танлаш"
     }
   },
   'uz-lat': {
@@ -434,7 +434,7 @@ export const TRANSLATIONS = {
       stats2: "Huquqiy tahlil va mantiqiy xulosa chiqarish ko'nikmalarini baholash.",
       stats3: "Akademik halollik va ma'lumotlar xavfsizligi kafolati.",
       accuracy: "Aniqlik",
-      model: "Gemini 3 Pro"
+      model: "Gemini 3 Flash"
     },
     about: {
       heroTitle: "TSUL Finalizer - Huquqiy mukammallik",
@@ -550,7 +550,7 @@ export const TRANSLATIONS = {
         unlimited: "Cheksiz baholash",
         export: "PDF eksport va chop etish",
         support: "24/7 Tezkor qo'llab-quvvatlash",
-        chat: "Cheksiz AI repetitor",
+        chat: "AI Teacher",
         history: "Cheksiz tarix",
         rubric: "Maxsus 'Mezon' rubrikalar",
         lex: "Chuqur lex.uz integratsiyasi",
@@ -624,7 +624,7 @@ export const TRANSLATIONS = {
       stats2: "Ҳуқуқий таҳлил ва мантиқий хулоса чиқариш кўникмаларини баҳолаш.",
       stats3: "Академик ҳалоллик ва маълумотлар хавфсизлиги кафолати.",
       accuracy: "Аниқлик",
-      model: "Gemini 3 Pro"
+      model: "Gemini 3 Flash"
     },
     about: {
       heroTitle: "TSUL Finalizer - Ҳуқуқий мукаммаллик",
