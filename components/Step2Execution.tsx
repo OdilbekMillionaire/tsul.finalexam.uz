@@ -78,16 +78,14 @@ const Step2Execution: React.FC = () => {
     
     const rubricString = formatRubricForAI(rubric);
     
-    // Pass the language LABEL for clarity to the AI.
-    const langLabel = language === 'ru' ? 'Russian' : language.startsWith('uz') ? 'Uzbek' : 'English';
-    
+    // Pass the raw language code (e.g. 'uz-lat') so the service handles localization precisely
     const realResult = await assessAnswer(
       masterCase,
       question.text,
       question.maxWeight,
       rubricString,
       answer.text,
-      langLabel
+      language
     );
 
     setAssessment(questionId, realResult);
