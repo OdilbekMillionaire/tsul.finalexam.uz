@@ -55,7 +55,7 @@ const isTransientError = (error: any): boolean => {
     msg.includes('quota') || 
     msg.includes('exhausted') ||
     msg.includes('503') || 
-    msg.includes('500') ||
+    msg.includes('500') || 
     msg.includes('overloaded') ||
     msg.includes('internal') ||
     msg.includes('timeout') ||
@@ -184,9 +184,10 @@ export const assessAnswer = async (
       const parsedData = safeJsonParse(responseText);
       
       const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-      const groundingUrls = groundingChunks
-          .map(chunk => chunk.web?.uri)
-          .filter((uri): uri is string => !!uri);
+      // Explicitly typing chunk and uri to avoid TS7006 error
+      const groundingUrls = (Array.isArray(groundingChunks) ? groundingChunks : [])
+          .map((chunk: any) => chunk.web?.uri)
+          .filter((uri: any): uri is string => typeof uri === 'string' && !!uri);
 
       return {
         score: typeof parsedData.score === 'number' ? parsedData.score : 0,
