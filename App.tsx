@@ -271,6 +271,18 @@ const App: React.FC = () => {
     setUsageDate(new Date().toDateString());
   };
 
+  // Bulk Import
+  const importExamData = (newCase: string, newQuestions: Question[], newAnswers: Record<string, StudentAnswer>) => {
+    setMasterCase(newCase);
+    setQuestions(newQuestions);
+    setAnswers(newAnswers);
+    
+    // Clear any results from previous session
+    setOverallFeedback(null);
+    setChatHistory([]);
+    setStep(1);
+  };
+
   const contextValue: ExamContextState = {
     view,
     step,
@@ -301,7 +313,8 @@ const App: React.FC = () => {
     upgradeSubscription,
     logout,
     checkUsage,
-    incrementUsage
+    incrementUsage,
+    importExamData
   };
 
   // New Logo SVG Component

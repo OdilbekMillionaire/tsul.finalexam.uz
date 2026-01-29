@@ -8,6 +8,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 // Model Constants
 const PRIMARY_MODEL = "gemini-3-flash-preview"; 
 const FALLBACK_MODEL = "gemini-3-pro-preview";
+const FAST_MODEL = "gemini-2.5-flash"; // Dedicated fast model for extractions
 
 // --- CONCURRENCY CONTROL (The Traffic Cop) ---
 // This class prevents "System Error" by ensuring we don't hit the API with 
@@ -300,36 +301,85 @@ export const chatWithAI = async (
   }
 };
 
-export const parseExamContent = async (rawText: string): Promise<{ masterCase: string; questions: string[] }> => {
+interface ParsedExamData {
+  masterCase: string;
+  items: {
+    questionText: string;
+    studentAnswer: string;
+    maxWeight: number;
+  }[];
+}
+
+export const parseExamContent = async (rawText: string): Promise<ParsedExamData> => {
   // Use limiter to prevent spamming import button
   return assessmentLimiter.run(async () => {
     const prompt = `
-      Split this exam text into 1) 'masterCase' (scenario) and 2) 'questions' (list).
-      Remove numbering from questions.
-      Input: "${rawText}"
+      You are an AI Text Extraction Agent.
+      The user will paste a single long text block containing an entire Exam Session (Case + Questions + Answers + UI Noise).
+
+      Your Goal: Extract the structured data and ignore the UI artifacts.
+
+      STRUCTURE OF THE INPUT TEXT:
+      1. "Master Case" (Scenario text) usually appears first.
+      2. Questions usually start with "X-savol" or similar.
+      3. Student Answers are located between the Question text and the Footer/Next Question.
+      4. Max Score is usually at the end of a question block, e.g. "Maksimal ball: 12" or "Max score: 30".
+
+      NOISE TO REMOVE (STRICTLY):
+      - "Tekshirilmagan"
+      - "Javob mavjud emas"
+      - "Xulosa matni 25ta belgidan kam bo'lmasligi kerak"
+      - "Saqlash"
+      - "Maksimal ball: 60" (This might be the total score at top, ignore if it's not specific to a question)
+
+      INSTRUCTIONS:
+      1. Extract 'masterCase'.
+      2. Extract a list of 'items'. For each item found:
+         - 'questionText': Remove "1-savol." prefixes if present.
+         - 'studentAnswer': The content written by the student. If empty or just "Xulosa matni kirit...", set as empty string.
+         - 'maxWeight': The number found in "Maksimal ball: X" at the end of the question block. If not found, default to 10.
+      
+      Input Text:
+      """${rawText}"""
     `;
 
     const schema: Schema = {
       type: Type.OBJECT,
       properties: {
         masterCase: { type: Type.STRING },
-        questions: { type: Type.ARRAY, items: { type: Type.STRING } }
+        items: { 
+          type: Type.ARRAY, 
+          items: { 
+             type: Type.OBJECT,
+             properties: {
+                questionText: { type: Type.STRING },
+                studentAnswer: { type: Type.STRING },
+                maxWeight: { type: Type.NUMBER }
+             },
+             required: ["questionText", "studentAnswer", "maxWeight"]
+          } 
+        }
       },
-      required: ["masterCase", "questions"]
+      required: ["masterCase", "items"]
     };
 
     try {
-       const response = await generateWithRetry(PRIMARY_MODEL, prompt, {
+       // Use FAST_MODEL for extraction
+       const response = await generateWithRetry(FAST_MODEL, prompt, {
           responseMimeType: "application/json",
           responseSchema: schema,
           temperature: 0
         }, 2);
 
       const text = response.text || "{}";
-      return safeJsonParse(text);
+      const data = safeJsonParse(text);
+      return {
+        masterCase: data.masterCase || "",
+        items: Array.isArray(data.items) ? data.items : []
+      };
     } catch (e) {
       console.error("Parse failed", e);
-      return { masterCase: "", questions: [] };
+      return { masterCase: "", items: [] };
     }
   });
 };

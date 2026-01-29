@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
-import { Question, RubricItem } from '../types';
+import { Question, RubricItem, StudentAnswer } from '../types';
 import { parseExamContent } from '../services/geminiService';
 
 const Step1Config: React.FC = () => {
@@ -14,7 +14,8 @@ const Step1Config: React.FC = () => {
     setQuestions, 
     rubric, 
     setRubric,
-    setStep 
+    setStep,
+    importExamData // New context method
   } = useExamContext();
 
   const t = TRANSLATIONS[language];
@@ -185,29 +186,50 @@ const Step1Config: React.FC = () => {
     if (!rawExamText.trim()) return;
     setIsParsing(true);
     
+    // Call the updated service that extracts Case, Questions, Answers, and Max Weights
     const result = await parseExamContent(rawExamText);
     
-    if (result.masterCase) {
-        setMasterCase(result.masterCase);
-    }
+    if (result.items && result.items.length > 0) {
+        // Construct Questions Array
+        const newQuestions: Question[] = [];
+        // Construct Answers Record
+        const newAnswers: Record<string, StudentAnswer> = {};
 
-    if (result.questions && result.questions.length > 0) {
-        const newQuestions = result.questions.map(qText => ({
-            id: crypto.randomUUID(),
-            text: qText,
-            maxWeight: 10 // Default weight, user can edit
-        }));
-        setQuestions(newQuestions);
-        pushHistory(result.masterCase || masterCase, newQuestions);
+        result.items.forEach(item => {
+            const qId = crypto.randomUUID();
+            
+            // 1. Create Question Object
+            newQuestions.push({
+                id: qId,
+                text: item.questionText,
+                maxWeight: item.maxWeight
+            });
+
+            // 2. Create Answer Object (if text exists)
+            if (item.studentAnswer && item.studentAnswer.trim()) {
+                newAnswers[qId] = {
+                    questionId: qId,
+                    text: item.studentAnswer,
+                    isAssessing: false
+                };
+            }
+        });
+
+        // Use the new Bulk Import context method
+        importExamData(result.masterCase, newQuestions, newAnswers);
+        
+        // Update local history
+        pushHistory(result.masterCase, newQuestions);
     } else {
-        // Even if no questions found, push history if case changed
+        // Fallback if parsing returned nothing useful but maybe a case
         if (result.masterCase) {
+           setMasterCase(result.masterCase);
            pushHistory(result.masterCase, questions);
         }
     }
 
     setIsParsing(false);
-    // Optionally clear raw text or keep it
+    setRawExamText(""); // Clear input on success
   };
 
   return (
@@ -388,149 +410,133 @@ const Step1Config: React.FC = () => {
           {questions.length === 0 && (
             <p className="text-slate-400 text-center italic py-4">{t.noQuestions}</p>
           )}
-        </div>
-      </section>
 
-      {/* Rubric Section */}
-      <section className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-           <h2 className="text-xl font-serif font-bold text-oxford-primary dark:text-white">{t.rubric}</h2>
-           
-           {/* Rubric Type Toggle */}
-           <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg self-start md:self-auto">
-              <button 
-                onClick={() => toggleRubricType('quick')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${rubric.type === 'quick' ? 'bg-white dark:bg-slate-800 shadow text-oxford-primary dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
-              >
-                {t.rubricUI.structuredMode}
-              </button>
-              <button 
-                onClick={() => toggleRubricType('custom')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${rubric.type === 'custom' ? 'bg-white dark:bg-slate-800 shadow text-oxford-primary dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
-              >
-                {t.rubricUI.customMode}
-              </button>
-           </div>
+          {/* New Question/Answers Preview after Import */}
+          {questions.length > 0 && (
+             <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
+                   Imported Answers Preview
+                </h3>
+                <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800 rounded-lg p-4 text-sm text-green-800 dark:text-green-300">
+                   <p className="font-bold mb-2">
+                      ✓ Successfully imported {questions.length} questions.
+                   </p>
+                   <p>
+                      Student answers have been loaded into Step 2 automatically. You can review them by clicking "Next Phase".
+                   </p>
+                </div>
+             </div>
+          )}
         </div>
         
-        {rubric.type === 'quick' ? (
-           /* Simplified Quick Rubric UI (Existing) */
-           <div className="flex flex-col gap-2 animate-fade-in">
-            {rubric.items.map((item) => (
-              <div 
-                key={item.id} 
-                className={`group relative flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
-                  item.enabled 
-                    ? 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 shadow-sm hover:shadow-md' 
-                    : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60 hover:opacity-100'
-                }`}
-              >
-                
-                {/* Tooltip on Hover */}
-                {item.description && (
-                  <div className="absolute left-10 -top-8 bg-[#0B1120] text-white text-xs p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 w-64 shadow-xl border border-slate-700">
-                    {item.description}
-                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-[#0B1120] rotate-45"></div>
-                  </div>
-                )}
-
-                {/* Toggle Switch (Compact) */}
-                <button 
-                  onClick={() => handleToggleItem(item.id)}
-                  className={`w-10 h-6 rounded-full p-1 transition-colors duration-200 ease-in-out flex items-center flex-shrink-0 ${item.enabled ? 'bg-oxford-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                >
-                  <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${item.enabled ? 'translate-x-4' : 'translate-x-0'}`} />
-                </button>
-                
-                {/* Editable Label */}
-                <div className="flex-1 min-w-0">
-                    <input 
-                      type="text"
-                      value={item.label}
-                      onChange={(e) => handleUpdateItem(item.id, 'label', e.target.value)}
-                      disabled={!item.enabled}
-                      className={`w-full text-base font-medium bg-transparent border-none focus:ring-0 outline-none truncate transition-colors ${item.enabled ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}
-                      placeholder={t.placeholders.rubricName}
-                    />
-                    {item.description && <p className="text-xs text-slate-400 dark:text-slate-400 truncate hidden md:block">{item.description}</p>}
-                </div>
-
-                {/* Redesigned Weighting Controls */}
-                <div className={`flex items-center gap-4 transition-opacity duration-200 ml-4 ${item.enabled ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    
-                    {/* Visual Weight Slider with Badge */}
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-lg p-2 border border-slate-200 dark:border-slate-600">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.rubricUI.weight}</span>
-                      <input
-                        type="range"
-                        min="1"
-                        max="10"
-                        value={item.weight}
-                        onChange={(e) => handleUpdateItem(item.id, 'weight', parseInt(e.target.value))}
-                        className={`w-24 h-2 rounded-lg appearance-none cursor-pointer transition-colors ${getSliderColorClass(item.weight)}`}
-                      />
-                      <div className={`px-2 py-1 min-w-[60px] flex items-center justify-center rounded-md border font-bold text-xs uppercase ${getBadgeColorClass(item.weight)}`}>
-                          {getWeightLabel(item.weight)}
-                      </div>
-                    </div>
-
-                    {/* Delete (Subtle) */}
-                    <button 
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30"
-                      title={t.rubricUI.delete}
-                  >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
+        {/* Rubric Config */}
+        <div className="mt-8 border-t border-slate-200 dark:border-slate-700 pt-8">
+           <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-serif font-bold text-oxford-primary dark:text-white">{t.rubric}</h2>
+              <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                 <button 
+                   onClick={() => toggleRubricType('quick')}
+                   className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rubric.type === 'quick' ? 'bg-white dark:bg-slate-600 shadow text-oxford-primary dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
+                 >
+                   {t.quickRubric}
+                 </button>
+                 <button 
+                   onClick={() => toggleRubricType('custom')}
+                   className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rubric.type === 'custom' ? 'bg-white dark:bg-slate-600 shadow text-oxford-primary dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
+                 >
+                   {t.advancedRubric}
+                 </button>
               </div>
-            ))}
+           </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-100 dark:border-slate-700">
-                  <button 
-                      onClick={handleAddCustomItem}
-                      className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-oxford-primary dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 border border-dashed border-slate-300 dark:border-slate-600 hover:border-oxford-primary dark:hover:border-white px-3 py-1.5 rounded transition-all flex items-center gap-1"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                    {t.rubricUI.addCriterion}
-                  </button>
-            </div>
-          </div>
-        ) : (
-          /* Custom Instructions Textarea */
-          <div className="animate-fade-in">
-             <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-4 mb-4">
-               <div className="flex gap-3">
-                 <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-yellow-500 dark:text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
+           {rubric.type === 'quick' ? (
+               <div className="space-y-4">
+                 <div className="grid grid-cols-12 gap-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">
+                    <div className="col-span-4 md:col-span-3">{t.rubricUI.name}</div>
+                    <div className="col-span-8 md:col-span-5">{t.rubricUI.description}</div>
+                    <div className="col-span-6 md:col-span-3 text-center">{t.rubricUI.weight}</div>
+                    <div className="col-span-6 md:col-span-1 text-right"></div>
                  </div>
-                 <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                   <p className="font-bold mb-1">Teacher Instructions</p>
-                   <p>Paste your "me'zons", grading rules, or specific criteria here. The AI will strictly prioritize these instructions over its default logic.</p>
-                 </div>
+                 
+                 {rubric.items.map((item) => (
+                    <div key={item.id} className={`grid grid-cols-12 gap-4 items-center p-3 rounded-lg border transition-all ${item.enabled ? 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 shadow-sm' : 'bg-slate-50 dark:bg-slate-800/50 border-transparent opacity-60'}`}>
+                       <div className="col-span-4 md:col-span-3">
+                          <input 
+                            className="w-full bg-transparent font-bold text-slate-700 dark:text-slate-200 outline-none text-sm"
+                            value={item.label}
+                            onChange={(e) => handleUpdateItem(item.id, 'label', e.target.value)}
+                            disabled={!item.enabled}
+                          />
+                       </div>
+                       <div className="col-span-8 md:col-span-5">
+                          <input 
+                            className="w-full bg-transparent text-slate-500 dark:text-slate-400 outline-none text-xs"
+                            value={item.description}
+                            onChange={(e) => handleUpdateItem(item.id, 'description', e.target.value)}
+                            disabled={!item.enabled}
+                          />
+                       </div>
+                       <div className="col-span-6 md:col-span-3 flex flex-col items-center gap-1">
+                           <input 
+                             type="range" 
+                             min="1" 
+                             max="10" 
+                             value={item.weight}
+                             onChange={(e) => handleUpdateItem(item.id, 'weight', parseInt(e.target.value))}
+                             disabled={!item.enabled}
+                             className={`w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer ${getSliderColorClass(item.weight)}`}
+                           />
+                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getBadgeColorClass(item.weight)}`}>
+                              {getWeightLabel(item.weight)}
+                           </span>
+                       </div>
+                       <div className="col-span-6 md:col-span-1 flex justify-end items-center gap-2">
+                          <button 
+                            onClick={() => handleToggleItem(item.id)}
+                            className={`w-8 h-5 rounded-full p-1 transition-colors ${item.enabled ? 'bg-oxford-primary' : 'bg-slate-300'}`}
+                          >
+                             <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${item.enabled ? 'translate-x-3' : 'translate-x-0'}`}></div>
+                          </button>
+                          <button onClick={() => handleRemoveItem(item.id)} className="text-slate-400 hover:text-red-500">
+                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                       </div>
+                    </div>
+                 ))}
+                 
+                 <button 
+                   onClick={handleAddCustomItem}
+                   className="mt-4 text-xs font-bold text-oxford-primary dark:text-oxford-accent hover:underline flex items-center gap-1"
+                 >
+                   + {t.rubricUI.addCriterion}
+                 </button>
                </div>
-             </div>
-             <textarea
-                className="w-full h-48 p-4 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-md focus:ring-2 focus:ring-oxford-primary focus:border-transparent outline-none transition font-mono text-sm"
-                placeholder={t.placeholders.customRubric}
-                value={rubric.customInstructions || ''}
-                onChange={(e) => setRubric({ ...rubric, customInstructions: e.target.value })}
-             />
-          </div>
-        )}
+           ) : (
+               <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 block">
+                     {t.rubricUI.customMode}
+                  </label>
+                  <textarea 
+                    className="w-full h-32 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-oxford-primary outline-none"
+                    placeholder={t.placeholders.customRubric}
+                    value={rubric.customInstructions || ''}
+                    onChange={(e) => setRubric({ ...rubric, customInstructions: e.target.value })}
+                  />
+                  <p className="text-xs text-slate-400 mt-2 italic">
+                     * The AI will prioritize your instructions above but still maintain baseline academic integrity (checking for legal hallucinations).
+                  </p>
+               </div>
+           )}
+        </div>
       </section>
 
-      <div className="flex justify-end pt-4 pb-12">
+      <div className="flex justify-end pt-8">
         <button
           onClick={() => setStep(2)}
-          disabled={!masterCase || questions.length === 0}
-          className="px-8 py-3 bg-oxford-primary text-white font-bold rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg flex items-center gap-2"
+          disabled={questions.length === 0}
+          className="px-8 py-3 bg-oxford-primary text-white font-bold rounded-lg hover:bg-opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {t.next} 
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+          {t.next} &rarr;
         </button>
       </div>
     </div>

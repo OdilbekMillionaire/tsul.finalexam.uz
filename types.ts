@@ -93,6 +93,9 @@ export interface ExamContextState {
   logout: () => void;
   checkUsage: () => boolean;
   incrementUsage: () => void;
+  
+  // New bulk import
+  importExamData: (masterCase: string, questions: Question[], answers: Record<string, StudentAnswer>) => void;
 }
 
 export const SUPPORTED_LANGUAGES: { code: Language; label: string }[] = [
