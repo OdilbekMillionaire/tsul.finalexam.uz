@@ -4,7 +4,8 @@ import { GoogleGenAI, Schema, Type } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // We use the 'flash' model as it is fast and excellent at OCR/Document Analysis.
-const PAYMENT_VERIFICATION_MODEL = "gemini-2.5-flash-latest";
+// Fixed: Removed '-latest' suffix to ensure stability and prevent 404 errors.
+const PAYMENT_VERIFICATION_MODEL = "gemini-2.5-flash";
 
 // Helper to convert File to Base64
 export const fileToGenerativePart = async (file: File): Promise<string> => {
@@ -26,7 +27,7 @@ const verificationSchema: Schema = {
   type: Type.OBJECT,
   properties: {
     is_receipt: { type: Type.BOOLEAN, description: "True ONLY if the image is a banking app screenshot or receipt." },
-    is_successful: { type: Type.BOOLEAN, description: "True if the transaction status indicates success (e.g. Muvaffaqiyatli, O'tkazildi, Success)." },
+    is_successful: { type: Type.BOOLEAN, description: "True if the transaction status indicates success (e.g. Muvaffaqiyatli, O'tkazildi, Success, Green Checkmark)." },
     extracted_amount: { type: Type.NUMBER, description: "The numeric amount found in the transfer. Ignore commissions if possible, get the main amount." },
     currency: { type: Type.STRING, description: "The currency code detected (e.g. UZS)." },
     description: { type: Type.STRING, description: "A brief one-sentence description of the image content." }
@@ -45,7 +46,9 @@ export const verifyPaymentReceipt = async (file: File, expectedAmount: number): 
       CRITICAL RULES:
       1. If the image is a selfie, a landscape, a random object, or blank, set "is_receipt" to FALSE.
       2. If the image shows a "Failed" or "Pending" transaction, set "is_successful" to FALSE.
-      3. Look for success keywords: "Muvaffaqiyatli", "O'tkazildi", "Успешно", "Success", "Sent", "Completed".
+      3. Look for success indicators:
+         - Keywords: "Muvaffaqiyatli", "O'tkazildi", "Успешно", "Success", "Sent", "Completed".
+         - Visuals: Green checkmarks, "Done" icons.
       4. Extract the NUMERIC value of the transfer. Example: for "89 000 UZS", extract 89000.
       
       Your goal is to prevent fraud. Only approve if it clearly looks like a genuine payment screenshot.
@@ -81,7 +84,7 @@ export const verifyPaymentReceipt = async (file: File, expectedAmount: number): 
     if (!result.is_successful) {
         return {
             verified: false,
-            reason: "The receipt does not show a 'Success' or 'Completed' status."
+            reason: "The receipt does not show a clear 'Success' or 'Completed' status."
         };
     }
 
@@ -101,11 +104,13 @@ export const verifyPaymentReceipt = async (file: File, expectedAmount: number): 
       reason: "Payment verified successfully."
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Payment verification failed:", error);
+    // Provide a more specific error if available, otherwise generic
+    const msg = error?.message || "Unknown error";
     return {
       verified: false,
-      reason: "Unable to process image. Please ensure the screenshot is clear and try again."
+      reason: `System Error: Unable to process image (${msg}). Please ensure the file is a valid image (JPG/PNG) and try again.`
     };
   }
 };
