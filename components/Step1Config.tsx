@@ -23,6 +23,17 @@ const Step1Config: React.FC = () => {
   // --- Smart Import State ---
   const [rawExamText, setRawExamText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
+  const [loadingTextIndex, setLoadingTextIndex] = useState(0);
+
+  // Cinematic Loading Texts
+  const LOADING_PHRASES = [
+      "Initializing Neural Core...",
+      "Detecting Exam Patterns...",
+      "Separating Case from Questions...",
+      "Analyzing Student Logic...",
+      "Structuring Data...",
+      "Finalizing Import..."
+  ];
 
   // --- Undo/Redo History Logic ---
   const [history, setHistory] = useState<{ c: string; q: Question[] }[]>([]);
@@ -37,6 +48,18 @@ const Step1Config: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cinematic Text Cycler
+  useEffect(() => {
+      let interval: any;
+      if (isParsing) {
+          setLoadingTextIndex(0);
+          interval = setInterval(() => {
+              setLoadingTextIndex(prev => (prev + 1) % LOADING_PHRASES.length);
+          }, 800);
+      }
+      return () => clearInterval(interval);
+  }, [isParsing]);
 
   const pushHistory = (newCase: string, newQuestions: Question[]) => {
     setHistory(prev => {
@@ -295,48 +318,87 @@ const Step1Config: React.FC = () => {
         </div>
       </div>
 
-      {/* SMART IMPORT SECTION - NEW FEATURE */}
-      <section className="bg-[#0B1120] dark:bg-black p-6 rounded-xl shadow-lg border border-slate-800 relative overflow-hidden">
-         {/* Decorative Background */}
-         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F59E0B] opacity-5 rounded-full blur-3xl pointer-events-none"></div>
+      {/* SMART IMPORT SECTION - CINEMATIC UPGRADE */}
+      <section className="bg-[#0B1120] dark:bg-black p-6 rounded-xl shadow-lg border border-slate-800 relative overflow-hidden min-h-[300px] flex flex-col">
          
-         <div className="relative z-10">
-            <h2 className="text-xl font-serif font-bold text-white mb-2 flex items-center gap-2">
-                <svg className="w-5 h-5 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                {t.smartImport.title}
-            </h2>
-            <p className="text-slate-400 text-sm mb-4">
-                {t.smartImport.description}
-            </p>
-            
-            <textarea
-                className="w-full h-32 p-4 bg-slate-800 dark:bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition text-sm mb-4"
-                placeholder={t.smartImport.placeholder}
-                value={rawExamText}
-                onChange={(e) => setRawExamText(e.target.value)}
-            />
-            
-            <button 
-                onClick={handleSmartImport}
-                disabled={isParsing || !rawExamText.trim()}
-                className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B1120] font-bold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {isParsing ? (
-                    <>
-                        <svg className="animate-spin h-5 w-5 text-[#0B1120]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        {t.smartImport.processing}
-                    </>
-                ) : (
-                    <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                        {t.smartImport.button}
-                    </>
-                )}
-            </button>
+         {/* Normal State Content */}
+         <div className={`transition-opacity duration-300 ${isParsing ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+             <div className="absolute top-0 right-0 w-64 h-64 bg-[#F59E0B] opacity-5 rounded-full blur-3xl pointer-events-none"></div>
+             
+             <div className="relative z-10">
+                <h2 className="text-xl font-serif font-bold text-white mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    {t.smartImport.title}
+                </h2>
+                <p className="text-slate-400 text-sm mb-4">
+                    {t.smartImport.description}
+                </p>
+                
+                <textarea
+                    className="w-full h-32 p-4 bg-slate-800 dark:bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition text-sm mb-4"
+                    placeholder={t.smartImport.placeholder}
+                    value={rawExamText}
+                    onChange={(e) => setRawExamText(e.target.value)}
+                />
+                
+                <button 
+                    onClick={handleSmartImport}
+                    disabled={isParsing || !rawExamText.trim()}
+                    className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B1120] font-bold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                >
+                    <span className="relative z-10 flex items-center gap-2">
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                       {t.smartImport.button}
+                    </span>
+                    {/* Hover Shine Effect */}
+                    <div className="absolute inset-0 h-full w-full scale-0 rounded-lg transition-all duration-300 group-hover:scale-100 group-hover:bg-white/10"></div>
+                </button>
+             </div>
          </div>
+
+         {/* Cinematic Loading Overlay */}
+         {isParsing && (
+             <div className="absolute inset-0 bg-[#0B1120] z-20 flex flex-col items-center justify-center">
+                 {/* Background Grid Animation */}
+                 <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.05)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
+                 
+                 {/* Scanning Beam */}
+                 <div className="absolute top-0 left-0 w-full h-1 bg-[#F59E0B]/50 shadow-[0_0_15px_#F59E0B] animate-[scan_2s_ease-in-out_infinite]"></div>
+                 
+                 <style>{`
+                    @keyframes scan {
+                        0% { top: 0%; opacity: 0; }
+                        10% { opacity: 1; }
+                        90% { opacity: 1; }
+                        100% { top: 100%; opacity: 0; }
+                    }
+                    @keyframes pulse-ring {
+                        0% { transform: scale(0.8); opacity: 0.5; }
+                        100% { transform: scale(2); opacity: 0; }
+                    }
+                 `}</style>
+
+                 {/* Central Brain/Chip Icon */}
+                 <div className="relative mb-8">
+                     <div className="absolute inset-0 bg-[#F59E0B] rounded-full animate-[pulse-ring_2s_cubic-bezier(0.215,0.61,0.355,1)_infinite]"></div>
+                     <div className="relative z-10 w-16 h-16 bg-[#0B1120] border-2 border-[#F59E0B] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+                        <svg className="w-8 h-8 text-[#F59E0B] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                     </div>
+                 </div>
+
+                 {/* Dynamic Text */}
+                 <div className="relative z-10 flex flex-col items-center">
+                     <div className="h-6 overflow-hidden">
+                        <p className="text-[#F59E0B] font-mono font-bold text-lg tracking-widest uppercase animate-fade-in key-{loadingTextIndex}">
+                           {LOADING_PHRASES[loadingTextIndex]}
+                        </p>
+                     </div>
+                     <div className="mt-2 w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
+                         <div className="h-full bg-[#F59E0B] animate-[width_2s_ease-in-out_infinite]" style={{ width: '30%' }}></div>
+                     </div>
+                 </div>
+             </div>
+         )}
       </section>
 
       {/* Master Case Section */}

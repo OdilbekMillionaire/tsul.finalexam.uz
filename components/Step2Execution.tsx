@@ -1,10 +1,48 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
 import { assessAnswer } from '../services/geminiService';
 import { Rubric } from '../types';
 import LimitModal from './LimitModal';
+
+// Cinematic Loader Component for Assessment
+const ThinkingOverlay: React.FC = () => {
+    const [textIndex, setTextIndex] = useState(0);
+    const PHRASES = [
+        "Consulting lex.uz Database...",
+        "Analyzing Legal Logic...",
+        "Checking Citations...",
+        "Applying Rubric...",
+        "Drafting Rationale...",
+        "Finalizing Verdict..."
+    ];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTextIndex(prev => (prev + 1) % PHRASES.length);
+        }, 1200);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="absolute inset-0 z-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-md flex flex-col items-center justify-center border border-white/20">
+            {/* Spinning AI Core */}
+            <div className="relative w-16 h-16 mb-4">
+                 <div className="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+                 <div className="absolute inset-0 border-4 border-t-oxford-primary dark:border-t-oxford-accent border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                 <div className="absolute inset-2 bg-oxford-primary dark:bg-oxford-accent rounded-full animate-pulse opacity-20"></div>
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-oxford-primary dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                 </div>
+            </div>
+            
+            <p className="text-oxford-primary dark:text-white font-bold font-mono tracking-wide animate-pulse">
+                {PHRASES[textIndex]}
+            </p>
+        </div>
+    );
+};
 
 const Step2Execution: React.FC = () => {
   const { 
@@ -172,14 +210,10 @@ const Step2Execution: React.FC = () => {
                     onChange={(e) => updateAnswer(q.id, e.target.value)}
                     disabled={isAssessing} 
                   />
-                  {isAssessing && (
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur border border-slate-100 p-1.5 rounded-full shadow-sm animate-pulse" title="AI is thinking...">
-                      <svg className="animate-spin h-5 w-5 text-oxford-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  )}
+                  
+                  {/* Cinematic Overlay using the new component */}
+                  {isAssessing && <ThinkingOverlay />}
+                  
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -201,10 +235,6 @@ const Step2Execution: React.FC = () => {
                   >
                      {isAssessing ? (
                        <>
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
                         {t.assessing}
                        </>
                      ) : hasResult ? 'Re-Assess' : t.assess}

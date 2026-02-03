@@ -6,6 +6,54 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { getOverallAssessment, chatWithAI } from '../services/geminiService';
 import LimitModal from './LimitModal';
 
+// Cinematic Loader for Overall Feedback
+const CinematicFeedbackLoader: React.FC = () => {
+    const [textIndex, setTextIndex] = useState(0);
+    const PHRASES = [
+        "Aggregating Student Performance...",
+        "Identifying Knowledge Gaps...",
+        "Synthesizing Growth Roadmap...",
+        "Drafting Final Verdict...",
+        "Formatting Report..."
+    ];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTextIndex(prev => (prev + 1) % PHRASES.length);
+        }, 1200);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="flex flex-col items-center justify-center py-16 relative overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+             {/* Background Matrix/Grid Effect */}
+             <div className="absolute inset-0 bg-[linear-gradient(rgba(11,17,32,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(11,17,32,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+             
+             {/* Glowing Orb/Icon */}
+             <div className="relative mb-8">
+                 <div className="absolute inset-0 bg-oxford-accent/30 rounded-full blur-xl animate-pulse"></div>
+                 <div className="relative z-10 w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl rotate-45 border-2 border-oxford-primary dark:border-oxford-accent flex items-center justify-center shadow-2xl">
+                     <div className="-rotate-45">
+                        <svg className="w-10 h-10 text-oxford-primary dark:text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                     </div>
+                 </div>
+             </div>
+
+             {/* Dynamic Text */}
+             <div className="relative z-10 flex flex-col items-center gap-3">
+                 <p className="text-xl font-serif font-bold text-oxford-primary dark:text-white tracking-wide animate-pulse">
+                     {PHRASES[textIndex]}
+                 </p>
+                 <div className="flex gap-1.5">
+                     <div className="w-2 h-2 bg-oxford-accent rounded-full animate-bounce"></div>
+                     <div className="w-2 h-2 bg-oxford-accent rounded-full animate-bounce delay-100"></div>
+                     <div className="w-2 h-2 bg-oxford-accent rounded-full animate-bounce delay-200"></div>
+                 </div>
+             </div>
+        </div>
+    );
+};
+
 const Step3Results: React.FC = () => {
   const { 
     language, 
@@ -297,13 +345,7 @@ const Step3Results: React.FC = () => {
           </div>
           <div className="p-8">
               {isGeneratingFeedback ? (
-                <div className="flex flex-col items-center justify-center py-8 text-slate-500 gap-3">
-                    <svg className="animate-spin h-8 w-8 text-oxford-primary dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>{t.generating}</span>
-                </div>
+                <CinematicFeedbackLoader />
               ) : overallFeedback ? (
                 <div className="prose max-w-none text-slate-700 dark:text-slate-300">
                   {renderRichText(overallFeedback)}

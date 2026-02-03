@@ -504,50 +504,82 @@ const App: React.FC = () => {
         </main>
         
         {/* Footer */}
-        <footer className="bg-[#0B1120] dark:bg-black text-slate-400 py-12 md:py-16 border-t border-slate-800 dark:border-slate-900">
+        <footer className="bg-[#0B1120] dark:bg-black text-slate-400 py-16 border-t border-slate-800 dark:border-slate-900">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
               
-              {/* Brand Col */}
-              <div className="max-w-xs">
-                <div className="flex items-center gap-3 mb-4 text-white">
-                  <Logo />
-                  <span className="text-xl font-serif font-bold uppercase">TSUL Finalizer</span>
+              {/* Column 1: Brand & Info Cards (Span 5) */}
+              <div className="md:col-span-5 space-y-8">
+                <div>
+                   <h3 className="text-white text-xl font-serif font-bold tracking-wide">OXFORDER LLC</h3>
+                   <p className="text-sm text-slate-500 mt-1">Leading AI LegalTech in Central Asia.</p>
                 </div>
-                <p className="text-sm font-medium text-slate-500">
-                  {t.dashboard.heroSubtitle}
-                </p>
+
+                {/* Founder Card */}
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4">
+                   <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg shrink-0">
+                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>
+                   </div>
+                   <div>
+                     <h4 className="text-white text-sm font-bold">Founder Information</h4>
+                     <p className="text-xs text-slate-400 mt-1">Founded by an Oxford University Law Magistrant.</p>
+                   </div>
+                </div>
+
+                {/* Partner Card */}
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4">
+                   <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
+                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                   </div>
+                   <div>
+                     <h4 className="text-white text-sm font-bold">INSTITUTIONAL PARTNER</h4>
+                     <p className="text-xs text-slate-400 mt-1">Proudly supporting students and faculty at <span className="text-white font-medium">Tashkent State University of Law (TSUL)</span>.</p>
+                   </div>
+                </div>
               </div>
 
-              {/* Links Col */}
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-6">{t.footer.platform}</h4>
-                <ul className="space-y-3 text-sm">
-                  <li><button onClick={() => setView('dashboard')} className="hover:text-white transition">{t.nav.dashboard}</button></li>
-                  <li><button onClick={() => setView('assessor')} className="hover:text-white transition">{t.nav.assessor}</button></li>
-                  <li><button onClick={() => setView('plans')} className="hover:text-white transition">{t.nav.plans}</button></li>
-                  <li><button onClick={() => setView('about')} className="hover:text-white transition">{t.nav.about}</button></li>
-                </ul>
+              {/* Column 2: Legal & Contact (Span 3) */}
+              <div className="md:col-span-3 space-y-6">
+                 <h4 className="text-xs font-bold text-white uppercase tracking-wider">LEGAL & CONTACT</h4>
+                 <ul className="space-y-3 text-sm">
+                   <li><button onClick={() => handleFooterLinkClick('Privacy Policy')} className="hover:text-white transition-colors">{t.footer.privacy}</button></li>
+                   <li><button onClick={() => handleFooterLinkClick('Terms of Service')} className="hover:text-white transition-colors">{t.footer.terms}</button></li>
+                 </ul>
+                 
+                 <a href="mailto:ceo@oxforder.uz" className="inline-flex items-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-colors text-slate-300 hover:text-white w-full">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    ceo@oxforder.uz
+                 </a>
               </div>
 
-              {/* Legal Col */}
-              <div className="max-w-sm">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-6">{t.about.legalTitle}</h4>
-                <div className="pl-4 border-l-2 border-[#F59E0B]">
-                  <p className="text-sm leading-relaxed text-slate-400">
-                    {t.about.legalText}
-                  </p>
-                </div>
+              {/* Column 3: Technology (Span 4) */}
+              <div className="md:col-span-4 space-y-6">
+                 <h4 className="text-xs font-bold text-white uppercase tracking-wider">TECHNOLOGY</h4>
+                 <div className="bg-gradient-to-br from-blue-900/40 to-slate-900/40 border border-blue-500/20 rounded-2xl p-6 relative overflow-hidden group">
+                    {/* Glow effect */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-2xl rounded-full -mr-16 -mt-16 pointer-events-none"></div>
+                    
+                    <div className="relative z-10">
+                       <div className="flex items-center gap-3 mb-3">
+                          <svg className="w-6 h-6 text-blue-400 animate-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
+                          <h3 className="text-white font-bold text-lg">Gemini 3 Pro</h3>
+                       </div>
+                       <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4">BUILT WITH GOOGLE AI</p>
+                       <p className="text-xs text-slate-400 leading-relaxed">
+                         Powered by advanced reasoning models for precise legal analysis.
+                       </p>
+                    </div>
+                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-              <p>{t.footer.rights}</p>
-              <div className="flex gap-6">
-                <button onClick={() => handleFooterLinkClick(t.footer.privacy)} className="hover:text-white cursor-pointer transition-colors">{t.footer.privacy}</button>
-                <button onClick={() => handleFooterLinkClick(t.footer.terms)} className="hover:text-white cursor-pointer transition-colors">{t.footer.terms}</button>
-                <button onClick={() => handleFooterLinkClick(t.footer.support)} className="hover:text-white cursor-pointer transition-colors">{t.footer.support}</button>
-              </div>
+            {/* Bottom Bar */}
+            <div className="border-t border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+               <p>© 2026 OXFORDER LLC. All rights reserved.</p>
+               <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-slate-600"></div>
+                  Tashkent, Uzbekistan
+               </div>
             </div>
           </div>
         </footer>
