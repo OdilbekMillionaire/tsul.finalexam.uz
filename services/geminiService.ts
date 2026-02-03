@@ -336,7 +336,7 @@ export const parseExamContent = async (rawText: string): Promise<ParsedExamData>
       1. Extract 'masterCase'.
       2. Extract a list of 'items'. For each item found:
          - 'questionText': Remove "1-savol." prefixes if present.
-         - 'studentAnswer': The content written by the student. If empty or just "Xulosa matni kirit...", set as empty string.
+         - 'studentAnswer': EXTRACT EXACTLY AS WRITTEN. **CRITICAL: PRESERVE ALL NEWLINES, PARAGRAPHS, AND BULLET POINTS.** Do not flatten the text into a single line. Use '\\n' for line breaks.
          - 'maxWeight': The number found in "Maksimal ball: X" at the end of the question block. If not found, default to 10.
       
       Input Text:
