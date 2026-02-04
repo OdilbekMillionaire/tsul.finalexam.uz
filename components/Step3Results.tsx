@@ -96,55 +96,127 @@ const Step3Results: React.FC = () => {
     max: q.maxWeight
   }));
 
-  // Helper to format text with Markdown headers and bullet points
-  const renderRichText = (text: string) => {
+  // Helper to format text with Markdown headers, bullet points, and TABLES
+  // allowTables: boolean - defaults to false to prevent tables in question analysis
+  const renderRichText = (text: string, allowTables: boolean = false) => {
     if (!text) return null;
     
-    // Split by newlines
+    // Helper for bold text
+    const parseBold = (str: string) => {
+         const parts = str.split(/(\*\*.*?\*\*)/);
+         return parts.map((part, idx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+               return <strong key={idx} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+            }
+            return part;
+         });
+    };
+
     const lines = text.split('\n');
-    
-    return (
-      <div className="space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-        {lines.map((line, i) => {
-          const trimmed = line.trim();
-          if (!trimmed) return <br key={i} className="content-[''] block h-2" />;
-          
-          // Header detection: matches #, ##, ### with or without strict space immediately after
-          // We allow lenient matching to catch "###Header" or "### Header"
-          if (/^#{1,6}.+/.test(trimmed)) {
-            // Remove the hashtags and any following whitespace
-            const cleanHeader = trimmed.replace(/^#{1,6}\s*/, '').replace(/\*\*/g, ''); 
-            return (
-              <h4 key={i} className="text-base font-bold text-oxford-primary dark:text-white mt-4 mb-2 border-b border-slate-100 dark:border-slate-700 pb-1">
+    const elements: React.ReactNode[] = [];
+    let tableBuffer: string[] = [];
+
+    const flushTable = () => {
+        if (tableBuffer.length === 0) return;
+
+        const rows = tableBuffer;
+        tableBuffer = [];
+
+        if (rows.length < 2) return; // Not enough rows for a table
+
+        // Basic parsing: assumed | header | header | \n | --- | --- |
+        const parseRow = (r: string) => {
+            return r.split('|').filter((c, i, arr) => {
+                 // Remove empty start/end if they exist due to split
+                 if (i === 0 && c.trim() === '') return false;
+                 if (i === arr.length - 1 && c.trim() === '') return false;
+                 return true;
+            }).map(c => c.trim());
+        };
+
+        const headers = parseRow(rows[0]);
+        // Row 1 is usually separator |---|---|
+        // Body starts at row 2
+        const bodyRows = rows.slice(2).map(parseRow);
+
+        elements.push(
+            <div key={`table-${elements.length}`} className="overflow-x-auto my-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800">
+                <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase text-xs font-bold">
+                        <tr>
+                            {headers.map((h, i) => (
+                                <th key={i} className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap min-w-[150px]">
+                                    {h}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {bodyRows.map((row, rIdx) => (
+                            <tr key={rIdx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                {row.map((cell, cIdx) => (
+                                    <td key={cIdx} className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                        {parseBold(cell)}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Skip empty lines, but if we are in a table, an empty line breaks the table
+        if (!line) {
+            flushTable();
+            elements.push(<br key={`br-${i}`} className="content-[''] block h-2" />);
+            continue;
+        }
+
+        // Table detection: must start with pipe AND tables must be allowed
+        if (allowTables && line.startsWith('|')) {
+            tableBuffer.push(line);
+            continue;
+        } else {
+            flushTable();
+        }
+        
+        // Header detection
+        if (/^#{1,6}.+/.test(line)) {
+            const cleanHeader = line.replace(/^#{1,6}\s*/, '').replace(/\*\*/g, ''); 
+            elements.push(
+              <h4 key={`h-${i}`} className="text-base font-bold text-oxford-primary dark:text-white mt-6 mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">
                 {cleanHeader}
               </h4>
             );
-          }
+            continue;
+        }
 
-          // Parse inline bolding (**text**)
-          const parseBold = (str: string) => {
-             const parts = str.split(/(\*\*.*?\*\*)/);
-             return parts.map((part, idx) => {
-                if (part.startsWith('**') && part.endsWith('**')) {
-                   return <strong key={idx} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
-                }
-                return part;
-             });
-          };
-
-          // Bullet points (-, *, •) or Numbered lists (1.)
-          if (/^[-*•]\s/.test(trimmed) || /^\d+\.\s/.test(trimmed)) {
-             const cleanContent = trimmed.replace(/^[-*•\d\.]+\s/, '');
-             return (
-               <div key={i} className="flex items-start gap-2 ml-1">
-                 <span className="mt-2 w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 flex-shrink-0" />
-                 <span>{parseBold(cleanContent)}</span>
+        // List detection
+        if (/^[-*•]\s/.test(line) || /^\d+\.\s/.test(line)) {
+             const cleanContent = line.replace(/^[-*•\d\.]+\s/, '');
+             elements.push(
+               <div key={`li-${i}`} className="flex items-start gap-3 ml-2 mb-2">
+                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-oxford-accent flex-shrink-0 shadow-sm" />
+                 <span className="text-slate-700 dark:text-slate-300">{parseBold(cleanContent)}</span>
                </div>
              );
-          }
+             continue;
+        }
 
-          return <p key={i}>{parseBold(trimmed)}</p>;
-        })}
+        // Paragraph
+        elements.push(<p key={`p-${i}`} className="mb-2">{parseBold(line)}</p>);
+    }
+
+    flushTable(); // Flush if table is at end of text
+
+    return (
+      <div className="space-y-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        {elements}
       </div>
     );
   };
@@ -281,12 +353,14 @@ const Step3Results: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-bold text-oxford-primary dark:text-slate-200 mb-2 uppercase text-xs tracking-wider">{t.rationale}</h4>
-                      {renderRichText(result.rationale)}
+                      {/* Disable tables for individual question rationale */}
+                      {renderRichText(result.rationale, false)}
                     </div>
                     <div>
                       <h4 className="font-bold text-oxford-secondary dark:text-red-400 mb-2 uppercase text-xs tracking-wider">{t.roadmap}</h4>
                       <div className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded border-l-4 border-oxford-secondary dark:border-red-500">
-                        {renderRichText(result.roadmap)}
+                        {/* Disable tables for individual question roadmap */}
+                        {renderRichText(result.roadmap, false)}
                       </div>
                     </div>
                   </div>
@@ -348,7 +422,8 @@ const Step3Results: React.FC = () => {
                 <CinematicFeedbackLoader />
               ) : overallFeedback ? (
                 <div className="prose max-w-none text-slate-700 dark:text-slate-300">
-                  {renderRichText(overallFeedback)}
+                  {/* Enable tables ONLY for overall feedback */}
+                  {renderRichText(overallFeedback, true)}
                 </div>
               ) : (
                 <div className="text-center py-8 text-slate-400 italic">
