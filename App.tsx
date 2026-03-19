@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { User } from '@supabase/supabase-js';
 import Step1Config from './components/Step1Config';
 import Step2Execution from './components/Step2Execution';
 import Step3Results from './components/Step3Results';
@@ -10,7 +9,7 @@ import Dashboard from './components/Dashboard';
 import Plans from './components/Plans';
 import Login from './components/Login';
 import Profile from './components/Profile';
-import { ExamContextState, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES, ChatMessage, SubscriptionTier } from './types';
+import { ExamContextState, AppUser, Language, Question, Rubric, StudentAnswer, View, SUPPORTED_LANGUAGES, ChatMessage, SubscriptionTier } from './types';
 import { TRANSLATIONS, RUBRIC_TEMPLATES, FREE_DAILY_LIMIT } from './constants';
 import { getActiveSubscription } from './services/subscriptionService';
 import { authService } from './services/authService';
@@ -75,7 +74,7 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   // Auth State
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
 
   // Single Sign-On auto-clear
   useEffect(() => {

@@ -44,7 +44,10 @@ const Profile: React.FC = () => {
   };
 
   const displayId = user.id.substring(0, 8).toUpperCase();
-  const initial = user.email?.charAt(0).toUpperCase() || '?';
+  const displayName = user.displayName || user.email || 'User';
+  const initial = (user.displayName || user.email)?.charAt(0).toUpperCase() || '?';
+  // For Google users, use their photo; local upload overrides it
+  const googlePhoto = user.provider === 'google' ? user.photoURL : null;
 
   const getTierColor = (tier: string) => {
     switch(tier) {
@@ -78,8 +81,8 @@ const Profile: React.FC = () => {
                   className="w-32 h-32 rounded-full border-4 border-white dark:border-slate-800 bg-white dark:bg-slate-800 shadow-lg overflow-hidden cursor-pointer relative transition-transform transform group-hover:scale-105"
                   title="Click to change photo"
                 >
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                    {avatarUrl || googlePhoto ? (
+                      <img src={avatarUrl || googlePhoto!} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-4xl font-serif font-bold text-[#0B1120] dark:text-white">
                           {initial}
@@ -103,7 +106,8 @@ const Profile: React.FC = () => {
             {/* Top Row: Email/ID and Logout Button */}
             <div className="pt-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
                 <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white tracking-tight">{user.email}</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white tracking-tight">{displayName}</h2>
+                    {user.provider === 'google' && <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>}
                     <p className="text-slate-500 dark:text-slate-400 font-medium mt-1 uppercase tracking-wide text-xs flex items-center gap-2">
                        {t.profile.id}: <span className="font-mono bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">{displayId}</span>
                     </p>

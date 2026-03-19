@@ -1,5 +1,12 @@
 
-import { User } from '@supabase/supabase-js';
+// Unified user type — works with both Supabase and Firebase users
+export interface AppUser {
+  id: string;       // Supabase: user.id | Firebase: user.uid
+  email: string | null;
+  displayName?: string | null;
+  photoURL?: string | null;
+  provider?: 'email' | 'google';
+}
 
 export type Language = 'en' | 'ru' | 'uz-lat' | 'uz-cyr';
 export type View = 'dashboard' | 'assessor' | 'about' | 'plans' | 'login' | 'profile';
@@ -68,7 +75,7 @@ export interface ExamContextState {
   overallFeedback: string | null;
   chatHistory: ChatMessage[];
   subscriptionTier: SubscriptionTier;
-  user: User | null; // Supabase User
+  user: AppUser | null;
   
   // Theme
   isDarkMode: boolean;
