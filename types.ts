@@ -9,7 +9,7 @@ export interface AppUser {
 }
 
 export type Language = 'en' | 'ru' | 'uz-lat' | 'uz-cyr';
-export type View = 'dashboard' | 'assessor' | 'about' | 'plans' | 'login' | 'profile';
+export type View = 'dashboard' | 'assessor' | 'about' | 'plans' | 'login' | 'profile' | 'settings';
 
 export interface RubricItem {
   id: string;

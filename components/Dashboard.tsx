@@ -1,58 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useExamContext } from '../App';
 import { TRANSLATIONS } from '../constants';
-
-const IMAGES = [
-  "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=2000", // Gavel/Law
-  "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&q=80&w=2000", // Library
-  "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?auto=format&fit=crop&q=80&w=2000", // Architecture
-  "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&q=80&w=2000", // Business/Meeting
-  "https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?auto=format&fit=crop&q=80&w=2000", // Pen/Paper
-  "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=2000", // Law books
-  "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=2000"  // Study
-];
 
 const Dashboard: React.FC = () => {
   const { language, setView, subscriptionTier } = useExamContext();
   const t = TRANSLATIONS[language];
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Auto-rotate carousel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % IMAGES.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="animate-fade-in font-sans">
-      
-      {/* Hero Carousel Section - Expanded to full width of parent padding using negative margins */}
-      <div className="relative h-[500px] w-[calc(100%+3rem)] -mx-6 overflow-hidden shadow-2xl mb-12">
-        {IMAGES.map((img, index) => (
-          <div 
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <img src={img} alt="Law background" className="w-full h-full object-cover" />
-            {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0B1120]/90 to-[#0B1120]/40"></div>
-          </div>
-        ))}
 
-        {/* Hero Content */}
-        <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-20 max-w-4xl z-10 ml-6">
-          <div className="bg-[#F59E0B] w-20 h-2 mb-6 rounded-full"></div>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-white mb-6 leading-tight drop-shadow-lg">
+      {/* Hero Section with Spline Robot */}
+      <div className="relative h-[500px] w-[calc(100%+3rem)] -mx-6 overflow-hidden shadow-2xl mb-12">
+
+        {/* LEFT SIDE — dark background with text */}
+        <div className="absolute left-0 top-0 bottom-0 w-[60%] bg-[#0B1120] flex flex-col justify-center px-10 md:px-16 z-10">
+          {/* gradient to blend into robot side */}
+          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0B1120] to-transparent" />
+          <div className="bg-[#F59E0B] w-20 h-2 mb-6 rounded-full" />
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-white mb-6 leading-tight">
             {t.dashboard.heroTitle}
           </h1>
-          <p className="text-xl md:text-2xl text-slate-200 mb-10 font-light max-w-2xl leading-relaxed">
+          <p className="text-xl text-slate-300 mb-10 font-light max-w-xl leading-relaxed">
             {t.dashboard.heroSubtitle}
           </p>
-          <div className="flex gap-4">
-            <button 
+          <div className="flex gap-4 flex-wrap">
+            <button
               onClick={() => setView('assessor')}
               className="px-8 py-4 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B1120] font-bold text-lg rounded-lg shadow-lg transition-transform transform hover:-translate-y-1 hover:scale-105 flex items-center gap-2"
             >
@@ -61,28 +34,37 @@ const Dashboard: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
             </button>
-            
+
             {subscriptionTier === 'free' && (
-               <button 
-                 onClick={() => setView('plans')}
-                 className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg rounded-lg shadow-lg transition-transform transform hover:-translate-y-1"
-               >
-                 Upgrade to Pro
-               </button>
+              <button
+                onClick={() => setView('plans')}
+                className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg rounded-lg shadow-lg transition-transform transform hover:-translate-y-1"
+              >
+                Upgrade to Pro
+              </button>
             )}
           </div>
         </div>
 
-        {/* Carousel Indicators */}
-        <div className="absolute bottom-6 right-10 flex gap-2 z-10 mr-6">
-          {IMAGES.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentImageIndex(idx)}
-              className={`w-3 h-3 rounded-full transition-all ${idx === currentImageIndex ? 'bg-[#F59E0B] w-8' : 'bg-white/50 hover:bg-white'}`}
-            />
-          ))}
+        {/* RIGHT SIDE — Spline 3D robot */}
+        <div className="absolute right-0 top-0 bottom-0 w-[40%]" style={{ overflow: 'hidden' }}>
+          <iframe
+            src="https://my.spline.design/nexbotrobotcharacterconcept-GMhByIfZsnPwyHWor7SGOF51/"
+            frameBorder={0}
+            title="OXFORDER AI"
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            allow="fullscreen"
+          />
+          {/* Watermark cover */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 52, background: '#0B1120', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 16, gap: 8, zIndex: 20 }}>
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+              <circle cx="12" cy="12" r="10" stroke="#F59E0B" strokeWidth="1.5"/>
+              <path d="M8 12l3 3 5-5" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span style={{ color: '#F59E0B', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>OXFORDER AI</span>
+          </div>
         </div>
+
       </div>
 
       {/* Info Cards Grid */}
@@ -151,7 +133,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
-            
+
             <div className="w-full md:w-auto flex flex-col gap-6">
                 <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10 min-w-[200px] text-center">
                     <div className="text-4xl font-bold text-[#F59E0B] mb-2">99%</div>
