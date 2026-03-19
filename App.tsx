@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
 import Step1Config from './components/Step1Config';
 import Step2Execution from './components/Step2Execution';
@@ -15,6 +16,24 @@ import { getActiveSubscription } from './services/subscriptionService';
 import { authService } from './services/authService';
 import SplineRobot from './components/SplineRobot';
 
+const ROUTE_MAP: Record<View, string> = {
+  dashboard: '/',
+  assessor: '/assessor',
+  about: '/about',
+  plans: '/plans',
+  login: '/login',
+  profile: '/profile',
+};
+
+const PATH_TO_VIEW: Record<string, View> = {
+  '/': 'dashboard',
+  '/assessor': 'assessor',
+  '/about': 'about',
+  '/plans': 'plans',
+  '/login': 'login',
+  '/profile': 'profile',
+};
+
 // --- Context Setup ---
 const ExamContext = createContext<ExamContextState | undefined>(undefined);
 
@@ -26,8 +45,15 @@ export const useExamContext = () => {
 
 // --- App Component ---
 const App: React.FC = () => {
+  // Router hooks
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentView: View = PATH_TO_VIEW[location.pathname] ?? 'dashboard';
+
+  // Navigation helper — keeps context API identical for child components
+  const setView = (v: View) => navigate(ROUTE_MAP[v]);
+
   // State initialization
-  const [view, setView] = useState<View>('dashboard');
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [language, setLanguage] = useState<Language>('uz-lat');
   const [masterCase, setMasterCase] = useState<string>('');
@@ -50,6 +76,13 @@ const App: React.FC = () => {
 
   // Auth State
   const [user, setUser] = useState<User | null>(null);
+
+  // Single Sign-On auto-clear
+  useEffect(() => {
+    if (window.location.hash.includes('access_token=')) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
 
   // Theme Persistence & Effect
   useEffect(() => {
@@ -90,7 +123,9 @@ const App: React.FC = () => {
       setUser(u);
       if (u) {
         // If we are on the login screen and user logs in, go to dashboard
-        setView((prev) => prev === 'login' ? 'dashboard' : prev);
+        if (window.location.pathname === '/login') {
+          navigate('/');
+        }
       }
     });
 
@@ -225,7 +260,7 @@ const App: React.FC = () => {
 
   const logout = async () => {
     await authService.signOut();
-    setView('dashboard');
+    navigate('/');
   };
 
   const handleNewLesson = () => {
@@ -236,7 +271,7 @@ const App: React.FC = () => {
       setOverallFeedback(null);
       setChatHistory([]);
       setStep(1);
-      setView('assessor');
+      navigate('/assessor');
       // Reset rubric to the template of the current language
       setRubric(RUBRIC_TEMPLATES[language]);
       // We do NOT reset daily usage here, that is tied to the user/date, not the lesson session.
@@ -285,7 +320,7 @@ const App: React.FC = () => {
   };
 
   const contextValue: ExamContextState = {
-    view,
+    view: currentView,
     step,
     language,
     masterCase,
@@ -383,26 +418,26 @@ const App: React.FC = () => {
               <nav className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
                 <button
                   onClick={() => setView('dashboard')}
-                  className={`px-3 py-2 rounded-md transition-colors ${view === 'dashboard' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                  className={`px-3 py-2 rounded-md transition-colors ${currentView === 'dashboard' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                 >
                   {t.nav.dashboard}
                 </button>
                 <button
                   onClick={() => setView('assessor')}
-                  className={`px-3 py-2 rounded-md transition-colors ${view === 'assessor' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                  className={`px-3 py-2 rounded-md transition-colors ${currentView === 'assessor' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                 >
                   {t.nav.assessor}
                 </button>
                 <button
                   onClick={() => setView('plans')}
-                  className={`px-3 py-2 rounded-md transition-colors ${view === 'plans' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                  className={`px-3 py-2 rounded-md transition-colors ${currentView === 'plans' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                 >
                   {t.nav.plans}
                 </button>
                 {user ? (
                   <button
                     onClick={() => setView('profile')}
-                    className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${view === 'profile' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                    className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${currentView === 'profile' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                   >
                     {/* Mini Avatar */}
                     <div className="w-5 h-5 rounded-full bg-oxford-primary text-white text-[10px] flex items-center justify-center">
@@ -413,7 +448,7 @@ const App: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => setView('login')}
-                    className={`px-3 py-2 rounded-md transition-colors ${view === 'login' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
+                    className={`px-3 py-2 rounded-md transition-colors ${currentView === 'login' ? 'text-[#0B1120] dark:text-white font-bold bg-slate-50 dark:bg-slate-800' : 'hover:text-[#0B1120] dark:hover:text-white'}`}
                   >
                     {t.nav.login}
                   </button>
@@ -453,55 +488,53 @@ const App: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
-
-          {view === 'dashboard' && <Dashboard />}
-          {view === 'login' && <Login />}
-          {view === 'profile' && <Profile />}
-
-          {view === 'assessor' && (
-            <>
-              {/* Assessor Stepper */}
-              <div className="mb-12 flex items-center justify-center">
-                <div className="flex items-center gap-4 text-sm font-semibold">
-                  <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>1</span>
-                    <span className="hidden sm:inline">{t.step1}</span>
-                  </div>
-                  <div className="w-16 h-px bg-slate-200 dark:bg-slate-700"></div>
-                  <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>2</span>
-                    <span className="hidden sm:inline">{t.step2}</span>
-                  </div>
-                  <div className="w-16 h-px bg-slate-200 dark:bg-slate-700"></div>
-                  <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>3</span>
-                    <span className="hidden sm:inline">{t.step3}</span>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/assessor" element={
+              <>
+                {/* Assessor Stepper */}
+                <div className="mb-12 flex items-center justify-center">
+                  <div className="flex items-center gap-4 text-sm font-semibold">
+                    <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>1</span>
+                      <span className="hidden sm:inline">{t.step1}</span>
+                    </div>
+                    <div className="w-16 h-px bg-slate-200 dark:bg-slate-700"></div>
+                    <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>2</span>
+                      <span className="hidden sm:inline">{t.step2}</span>
+                    </div>
+                    <div className="w-16 h-px bg-slate-200 dark:bg-slate-700"></div>
+                    <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#0B1120] dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-[#0B1120] dark:bg-oxford-accent text-white dark:text-[#0B1120] border-[#0B1120] dark:border-oxford-accent' : 'border-slate-200 dark:border-slate-700'}`}>3</span>
+                      <span className="hidden sm:inline">{t.step3}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Assessor Steps */}
-              {step === 1 && <Step1Config />}
-              {step === 2 && <Step2Execution />}
-              {step === 3 && <Step3Results />}
+                {/* Assessor Steps */}
+                {step === 1 && <Step1Config />}
+                {step === 2 && <Step2Execution />}
+                {step === 3 && <Step3Results />}
 
-              {/* Reset/New Lesson Button for Assessor view */}
-              {questions.length > 0 && (
-                <div className="flex justify-center mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
-                  <button
-                    onClick={handleNewLesson}
-                    className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline"
-                  >
-                    {t.resetSession}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {view === 'plans' && <Plans />}
-          {view === 'about' && <AboutUs />}
-
+                {/* Reset/New Lesson Button for Assessor view */}
+                {questions.length > 0 && (
+                  <div className="flex justify-center mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
+                    <button
+                      onClick={handleNewLesson}
+                      className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline"
+                    >
+                      {t.resetSession}
+                    </button>
+                  </div>
+                )}
+              </>
+            } />
+          </Routes>
         </main>
 
         {/* Footer */}
@@ -563,11 +596,11 @@ const App: React.FC = () => {
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-3">
                       <svg className="w-6 h-6 text-blue-400 animate-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" /></svg>
-                      <h3 className="text-white font-bold text-lg">Gemini 3 Pro</h3>
+                      <h3 className="text-white font-bold text-lg">OXFORDER AI</h3>
                     </div>
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4">BUILT WITH GOOGLE AI</p>
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4">PROPRIETARY AI ENGINE</p>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      Powered by advanced reasoning models for precise legal analysis.
+                      Powered by OXFORDER AI's proprietary engine for precise legal analysis.
                     </p>
                   </div>
                 </div>

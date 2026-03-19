@@ -6,9 +6,9 @@ import { TRANSLATIONS } from "../constants";
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Model Constants
-const PRIMARY_MODEL = "gemini-3-flash-preview"; 
-const FALLBACK_MODEL = "gemini-3-pro-preview";
-const FAST_MODEL = "gemini-2.5-flash"; // Dedicated fast model for extractions
+const PRIMARY_MODEL = "gemini-3-flash-preview";
+const FALLBACK_MODEL = "gemini-2.5-flash";
+const FAST_MODEL = "gemini-2.0-flash"; // Unlimited RPD — Dedicated fast model for extractions
 
 // --- CONCURRENCY CONTROL (The Traffic Cop) ---
 // This class prevents "System Error" by ensuring we don't hit the API with 
@@ -175,7 +175,16 @@ export const assessAnswer = async (
       } catch (error) {
         console.warn(`Primary model failed. Switching to Fallback.`);
         if (isTransientError(error)) {
-          response = await generateWithRetry(FALLBACK_MODEL, prompt, config, 2);
+          try {
+            response = await generateWithRetry(FALLBACK_MODEL, prompt, config, 2);
+          } catch (fallbackError) {
+            console.warn(`Fallback model failed. Switching to Fast model.`);
+            if (isTransientError(fallbackError)) {
+              response = await generateWithRetry(FAST_MODEL, prompt, config, 2);
+            } else {
+              throw fallbackError;
+            }
+          }
         } else {
           throw error;
         }
@@ -261,24 +270,55 @@ export const chatWithAI = async (
 ): Promise<string> => {
   // Chat is usually lighter, but let's be safe and allow it parallel to assessment
   // or simple retry without queue to keep it snappy.
-  const contextStr = `
-    Master Case: ${contextData.masterCase.substring(0, 500)}...
-    Q&A Context: ${JSON.stringify(contextData.questions.map(q => ({ q: q.text, s: contextData.answers[q.id]?.assessment?.score })))}
-  `;
+  const outputLang = getFallbackLanguageLabel(language);
+
+  const totalScore = contextData.questions.reduce((sum, q) => sum + (contextData.answers[q.id]?.assessment?.score || 0), 0);
+  const maxScore = contextData.questions.reduce((sum, q) => sum + q.maxWeight, 0);
+
+  const questionsDetail = contextData.questions.map((q, i) => {
+    const ans = contextData.answers[q.id];
+    const assessment = ans?.assessment;
+    return [
+      `Q${i + 1}: ${q.text} (Max: ${q.maxWeight} pts)`,
+      `  Student Answer: ${ans?.text || '(no answer)'}`,
+      `  Score: ${assessment?.score ?? 'N/A'} / ${q.maxWeight}`,
+      `  Rationale: ${assessment?.rationale || 'N/A'}`,
+      `  Growth Roadmap: ${assessment?.roadmap || 'N/A'}`,
+      `  Citations: ${assessment?.citations?.join(', ') || 'N/A'}`,
+    ].join('\n');
+  }).join('\n\n');
+
+  const systemInstruction = `You are the TSUL Faculty Evaluator (OXFORDER AI) who graded this exam. You have full knowledge of every detail below. Answer student questions ONLY based on this data.
+
+=== EXAM CONTEXT ===
+Master Case:
+${contextData.masterCase}
+
+Questions & Results:
+${questionsDetail}
+
+Overall Performance: ${totalScore} / ${maxScore}
+=========================
+
+Rules:
+- Answer ONLY based on the assessment data above
+- Defend grading decisions firmly but constructively
+- If asked about a law or article, refer to the citations provided in the assessment
+- Respond in ${outputLang}
+- Keep answers concise (under 150 words)
+- Do NOT invent scores, rationale, or citations not present in the data above`;
 
   const chatHistory = history.map(h => ({
     role: h.role,
     parts: [{ text: h.text }]
   }));
 
-  const outputLang = getFallbackLanguageLabel(language);
-
   const attemptChat = async (model: string) => {
     const chat = ai.chats.create({
       model: model,
       history: chatHistory,
-      config: { 
-        systemInstruction: `AI Tutor. Language: ${outputLang}. Context: ${contextStr}. Be helpful.` 
+      config: {
+        systemInstruction
       }
     });
     return await chat.sendMessage({ message: newMessage });

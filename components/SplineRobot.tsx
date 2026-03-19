@@ -40,7 +40,13 @@ const SplineRobot: React.FC = () => {
                         <button onClick={() => setDismissed(true)} title="Close"
                             style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,33,71,0.75)', border: '1px solid rgba(196,164,132,0.4)', color: '#C4A484', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                     </div>
-                    <div style={{ position: 'absolute', bottom: 10, left: 12, background: 'rgba(0,33,71,0.8)', color: 'white', padding: '4px 12px', borderRadius: 40, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(6px)', pointerEvents: 'none' }}>OXFORDER AI</div>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 52, background: '#002147', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 14, gap: 7, zIndex: 20, pointerEvents: 'none' }}>
+                      <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                        <circle cx="12" cy="12" r="10" stroke="#C4A484" strokeWidth="1.5"/>
+                        <path d="M8 12l3 3 5-5" stroke="#C4A484" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span style={{ color: '#C4A484', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>OXFORDER AI</span>
+                    </div>
                 </>
             )}
             {minimized && (

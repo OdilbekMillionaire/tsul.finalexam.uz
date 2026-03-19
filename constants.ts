@@ -54,7 +54,7 @@ export const TRANSLATIONS = {
       stats2: "Precise assessment of legal analysis and logical reasoning.",
       stats3: "Guaranteed academic integrity and data security.",
       accuracy: "Accuracy",
-      model: "Gemini 3 Flash"
+      model: "OXFORDER AI"
     },
     about: {
       heroTitle: "TSUL Finalizer - Legal Excellence",
@@ -62,7 +62,7 @@ export const TRANSLATIONS = {
       missionTitle: "Our mission",
       missionText: "Digitizing legal education and providing deep knowledge to students using the latest pedagogical technologies.",
       techTitle: "AI technology",
-      techText: "A system working on Google Gemini 3 Pro models creates unique lessons adapted to each student's needs.",
+      techText: "OXFORDER AI's proprietary engine creates unique lessons adapted to each student's needs.",
       developerTitle: "Developer",
       developerText: "This platform is proudly developed by Oxforder LLC — the #1 EdTech company in Uzbekistan, pioneering academic excellence and digital innovation in legal education.",
       legalTitle: "Legal warning",
@@ -244,7 +244,7 @@ export const TRANSLATIONS = {
       stats2: "Точная оценка юридического анализа и логического мышления.",
       stats3: "Гарантированная академическая честность и безопасность данных.",
       accuracy: "Точность",
-      model: "Gemini 3 Flash"
+      model: "OXFORDER AI"
     },
     about: {
       heroTitle: "TSUL Finalizer - Совершенство права",
@@ -252,7 +252,7 @@ export const TRANSLATIONS = {
       missionTitle: "Наша миссия",
       missionText: "Цифровизация юридического образования и предоставление студентам глубоких знаний с использованием новейших педагогических технологий.",
       techTitle: "AI технологии",
-      techText: "Система, работающая на моделях Google Gemini 3 Pro, создает уникальные уроки, адаптированные под нужды каждого студента.",
+      techText: "Проприетарный движок OXFORDER AI создает уникальные уроки, адаптированные под нужды каждого студента.",
       developerTitle: "Разработчик",
       developerText: "Эта платформа разработана ООО Oxforder — лучшей EdTech компанией Узбекистана, лидером в области академического совершенства и инноваций.",
       legalTitle: "Юридическое предупреждение",
@@ -434,7 +434,7 @@ export const TRANSLATIONS = {
       stats2: "Huquqiy tahlil va mantiqiy xulosa chiqarish ko'nikmalarini baholash.",
       stats3: "Akademik halollik va ma'lumotlar xavfsizligi kafolati.",
       accuracy: "Aniqlik",
-      model: "Gemini 3 Flash"
+      model: "OXFORDER AI"
     },
     about: {
       heroTitle: "TSUL Finalizer - Huquqiy mukammallik",
@@ -442,7 +442,7 @@ export const TRANSLATIONS = {
       missionTitle: "Bizning missiyamiz",
       missionText: "Yuridik ta'limni raqamlashtirish va talabalarga eng so'nggi pedagogik texnologiyalar yordamida chuqur bilim berish.",
       techTitle: "AI texnologiyasi",
-      techText: "Google Gemini 3 Pro modellari asosida ishlovchi tizim har bir talabaning ehtiyojiga moslashtirilgan noyob darslarni yaratadi.",
+      techText: "OXFORDER AI ning xususiy mexanizmi har bir talabaning ehtiyojiga moslashtirilgan noyob darslarni yaratadi.",
       developerTitle: "Ishlab chiqaruvchi",
       developerText: "Ushbu platforma O'zbekistondagi eng zo'r EdTech kompaniyasi — Oxforder MCHJ tomonidan yaratilgan bo'lib, ta'limdagi innovatsiyalar yetakchisi hisoblanadi.",
       legalTitle: "Yuridik ogohlantirish",
@@ -624,7 +624,7 @@ export const TRANSLATIONS = {
       stats2: "Ҳуқуқий таҳлил ва мантиқий хулоса чиқариш кўникмаларини баҳолаш.",
       stats3: "Академик ҳалоллик ва маълумотлар хавфсизлиги кафолати.",
       accuracy: "Аниқлик",
-      model: "Gemini 3 Flash"
+      model: "OXFORDER AI"
     },
     about: {
       heroTitle: "TSUL Finalizer - Ҳуқуқий мукаммаллик",
@@ -632,7 +632,7 @@ export const TRANSLATIONS = {
       missionTitle: "Бизнинг миссиямиз",
       missionText: "Юридик таълимни рақамлаштириш ва талабаларга энг сўнгги педагогик технологиялар ёрдамида чуқур билим бериш.",
       techTitle: "AI технологияси",
-      techText: "Google Gemini 3 Pro моделлари асосида ишловчи тизим ҳар бир талабанинг эҳтиёжига мослаштирилган ноёб дарсларни яратади.",
+      techText: "OXFORDER AI нинг хусусий механизми ҳар бир талабанинг эҳтиёжига мослаштирилган ноёб дарсларни яратади.",
       developerTitle: "Ишлаб чиқарувчи",
       developerText: "Ушбу платформа Ўзбекистондаги энг зўр EdTech компанияси — Oxforder МЧЖ томонидан яратилган бўлиб, таълимдаги инновациялар етакчиси ҳисобланади.",
       legalTitle: "Юридик огоҳлантириш",
